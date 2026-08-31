@@ -39,6 +39,14 @@ import {
   backToLobby,
 } from './utils/room';
 
+function PageDivider({ label }) {
+  return (
+    <div className="page-divider">
+      <span>{label}</span>
+    </div>
+  );
+}
+
 export default function App() {
   const [view, setView] = useState('home'); // home | create | join
   const [busy, setBusy] = useState(false);
@@ -191,6 +199,7 @@ export default function App() {
               creating={busy}
               error={error}
             />
+            <PageDivider label="OTAKU UNDERCOVER" />
           </div>
         )}
 
@@ -204,6 +213,7 @@ export default function App() {
               joining={busy}
               error={error}
             />
+            <PageDivider label="OTAKU UNDERCOVER" />
           </div>
         )}
 
@@ -287,6 +297,7 @@ export default function App() {
                 onBackToLobby={() => backToLobby(code)}
               />
             )}
+            <PageDivider label="OTAKU UNDERCOVER" />
           </div>
         )}
 

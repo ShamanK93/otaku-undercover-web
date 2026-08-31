@@ -9,17 +9,28 @@ export default function HomeScreen({ onCreate, onJoin }) {
         <div className="hub-brand">
           <img src={logo} alt="Otaku Undercover" className="hub-brand-logo" />
         </div>
+        <span className="hub-kanji-badge">
+          <span className="hub-kanji-badge-inner">狸</span>
+        </span>
       </header>
 
-      <section className="hub-hero">
-        <img src={mascot} alt="" className="hub-hero-mascot" />
-        <div className="hub-hero-text">
-          <h1 className="hub-hero-title">DEVINE QUI EST L'INTRUS</h1>
+      <section className="hub-hero manga-dots manga-speedlines">
+        <div className="hub-hero-mascot-col">
+          <img src={mascot} alt="" className="hub-hero-mascot-big" />
+          <div className="manga-speech-bubble">
+            <span>On y va ?!</span>
+          </div>
+        </div>
+
+        <div className="chapter-box hub-hero-text">
+          <span className="chapter-label">Chapitre 01</span>
+          <h1 className="hub-hero-title">DEVINE QUI<br />EST L'INTRUS</h1>
           <p className="hub-hero-sub">
             Le party game façon Undercover, version anime, en ligne. Crée un salon, envoie le
             code ou le lien à tes potes, et démasquez les undercovers avant qu'ils ne prennent
             le dessus — chacun sur son propre écran.
           </p>
+          <span className="chapter-fx">!?</span>
         </div>
       </section>
 
@@ -35,6 +46,10 @@ export default function HomeScreen({ onCreate, onJoin }) {
           <span className="mode-tile-desc">Entre le code (ou clique le lien) que ton hôte t'a envoyé.</span>
         </button>
       </section>
+
+      <div className="page-divider">
+        <span>ページ 01</span>
+      </div>
     </div>
   );
 }
