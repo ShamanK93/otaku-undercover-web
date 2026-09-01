@@ -234,7 +234,6 @@ img { max-width: 100%; display: block; }
   border: 3px solid var(--color-primary);
   padding: 22px; background: var(--color-bg);
   margin-bottom: 20px;
-  overflow: hidden;
 }
 .chapter-label {
   position: absolute; top: -13px; left: 16px;
