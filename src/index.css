@@ -230,9 +230,11 @@ img { max-width: 100%; display: block; }
   border-width: 8px 8px 0 0; border-style: solid; border-color: var(--color-text) transparent transparent transparent;
 }
 .chapter-box {
-  position: relative; z-index: 1; flex: 1; min-width: 0;
+  position: relative; z-index: 1;
   border: 3px solid var(--color-primary);
   padding: 22px; background: var(--color-bg);
+  margin-bottom: 20px;
+  overflow: hidden;
 }
 .chapter-label {
   position: absolute; top: -13px; left: 16px;
@@ -273,6 +275,16 @@ img { max-width: 100%; display: block; }
 }
 .hub-cta:hover { transform: translateY(-2px); }
 .hub-cta:active { transform: scale(0.97); }
+
+.hub-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.hub-action-btn { padding: 18px 20px; font-size: 15px; letter-spacing: 0.5px; }
+
+.btn-outline { background: var(--color-bg); color: var(--color-text); }
 
 .hub-grid {
   display: grid;
@@ -414,7 +426,7 @@ img { max-width: 100%; display: block; }
 .btn:disabled { background: var(--color-muted) !important; border-color: var(--color-muted) !important; cursor: not-allowed; }
 
 .btn-primary { background: var(--color-primary); }
-.btn-secondary { background: var(--color-secondary); }
+.btn-secondary { background: var(--color-bg); }
 .btn-danger { background: var(--color-danger); }
 
 .pressable {

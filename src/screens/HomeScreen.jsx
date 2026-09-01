@@ -1,6 +1,5 @@
 import React from 'react';
 import logo from '../assets/logo.png';
-import mascot from '../assets/mascot.png';
 
 export default function HomeScreen({ onCreate, onJoin }) {
   return (
@@ -14,38 +13,23 @@ export default function HomeScreen({ onCreate, onJoin }) {
         </span>
       </header>
 
-      <section className="hub-hero manga-dots manga-speedlines">
-        <div className="hub-hero-mascot-col">
-          <img src={mascot} alt="" className="hub-hero-mascot-big" />
-          <div className="manga-speech-bubble">
-            <span>On y va ?!</span>
-          </div>
-        </div>
-
-        <div className="chapter-box hub-hero-text">
-          <span className="chapter-label">Chapitre 01</span>
-          <h1 className="hub-hero-title">DEVINE QUI<br />EST L'INTRUS</h1>
-          <p className="hub-hero-sub">
-            Le party game façon Undercover, version anime, en ligne. Crée un salon, envoie le
-            code ou le lien à tes potes, et démasquez les undercovers avant qu'ils ne prennent
-            le dessus — chacun sur son propre écran.
-          </p>
-          <span className="chapter-fx">!?</span>
-        </div>
+      <section className="chapter-box manga-dots">
+        <span className="chapter-label">Chapitre 01</span>
+        <h1 className="hub-hero-title">DEVINE QUI EST L'INTRUS</h1>
+        <p className="hub-hero-sub">
+          Crée un salon, invite tes potes avec un code, chacun sur son écran.
+        </p>
+        <span className="chapter-fx">!?</span>
       </section>
 
-      <section className="hub-grid">
-        <button type="button" className="mode-tile mode-tile--primary" onClick={onCreate}>
-          <span className="mode-tile-icon">➕</span>
-          <span className="mode-tile-title">Créer un salon</span>
-          <span className="mode-tile-desc">Deviens l'hôte, choisis les animés et invite tes amis avec un code.</span>
+      <div className="hub-actions">
+        <button type="button" className="btn btn-primary hub-action-btn" onClick={onCreate}>
+          + Créer un salon
         </button>
-        <button type="button" className="mode-tile" onClick={onJoin}>
-          <span className="mode-tile-icon">🔑</span>
-          <span className="mode-tile-title">Rejoindre un salon</span>
-          <span className="mode-tile-desc">Entre le code (ou clique le lien) que ton hôte t'a envoyé.</span>
+        <button type="button" className="btn btn-outline hub-action-btn" onClick={onJoin}>
+          🔑 Rejoindre un salon
         </button>
-      </section>
+      </div>
 
       <div className="page-divider">
         <span>ページ 01</span>
