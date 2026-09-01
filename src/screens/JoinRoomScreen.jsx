@@ -16,7 +16,7 @@ export default function JoinRoomScreen({ defaultName, defaultCode, onBack, onJoi
       <input
         type="text"
         className="text-input"
-        style={{ width: '100%', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 2, textAlign: 'center', fontWeight: 800 }}
+        style={{ maxWidth: 260, margin: '0 auto 12px', display: 'block', textTransform: 'uppercase', letterSpacing: 2, textAlign: 'center', fontWeight: 800 }}
         placeholder="CODE DU SALON"
         value={code}
         maxLength={5}
@@ -25,7 +25,7 @@ export default function JoinRoomScreen({ defaultName, defaultCode, onBack, onJoi
       <input
         type="text"
         className="text-input"
-        style={{ width: '100%', marginBottom: 16 }}
+        style={{ maxWidth: 260, margin: '0 auto 16px', display: 'block' }}
         placeholder="Ton pseudo"
         value={name}
         maxLength={20}

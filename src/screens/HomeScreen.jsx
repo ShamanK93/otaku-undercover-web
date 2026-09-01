@@ -1,12 +1,11 @@
 import React from 'react';
-import logo from '../assets/logo.png';
 
 export default function HomeScreen({ onCreate, onJoin }) {
   return (
     <div className="hub">
       <header className="hub-topbar">
-        <div className="hub-brand">
-          <img src={logo} alt="Otaku Undercover" className="hub-brand-logo" />
+        <div className="hub-brand-text">
+          OTAKU<span className="hub-brand-accent">UNDERCOVER</span>
         </div>
         <span className="hub-kanji-badge">
           <span className="hub-kanji-badge-inner">狸</span>

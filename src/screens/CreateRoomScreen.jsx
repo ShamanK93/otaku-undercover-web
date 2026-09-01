@@ -13,7 +13,7 @@ export default function CreateRoomScreen({ defaultName, onBack, onCreate, creati
       <input
         type="text"
         className="text-input"
-        style={{ width: '100%', marginBottom: 16 }}
+        style={{ maxWidth: 260, margin: '0 auto 16px', display: 'block' }}
         placeholder="Ton pseudo"
         value={name}
         maxLength={20}
