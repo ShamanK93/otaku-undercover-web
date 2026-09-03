@@ -11,6 +11,7 @@ import VoteScreen from './screens/VoteScreen';
 import EliminationScreen from './screens/EliminationScreen';
 import GameOverScreen from './screens/GameOverScreen';
 import AdSlot from './components/AdSlot';
+import { Analytics } from '@vercel/analytics/react';
 
 import { ANIME_LIST } from './data/animeDatabase';
 import { firebaseReady } from './firebase';
@@ -314,6 +315,7 @@ export default function App() {
       <footer className="site-footer">
         Otaku Undercover — crée un salon et joue en ligne avec tes amis.
       </footer>
+      <Analytics />
     </div>
   );
 }
