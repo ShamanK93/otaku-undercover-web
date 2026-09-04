@@ -40,7 +40,7 @@ export function getInviteLink(code) {
 
 // ---------- Création / connexion au salon ----------
 
-export async function createRoom(hostName) {
+export async function createRoom(hostName, gameType = 'undercover') {
   const playerId = getOrCreatePlayerId();
   saveName(hostName);
 
@@ -52,18 +52,27 @@ export async function createRoom(hostName) {
     code = generateRoomCode();
   }
 
-  await set(ref(db, `rooms/${code}`), {
+  const base = {
     hostId: playerId,
     phase: 'lobby',
+    gameType,
     createdAt: serverTimestamp(),
-    selectedAnimeIds: {},
-    selectedTypes: {},
-    selectedDifficulties: {},
-    settings: { numUndercover: 1, numMrWhite: 0, clueSeconds: 30 },
     players: {
       [playerId]: { name: hostName.trim(), joinedAt: serverTimestamp() },
     },
-  });
+  };
+
+  if (gameType === 'rule') {
+    await set(ref(db, `rooms/${code}`), base);
+  } else {
+    await set(ref(db, `rooms/${code}`), {
+      ...base,
+      selectedAnimeIds: {},
+      selectedTypes: {},
+      selectedDifficulties: {},
+      settings: { numUndercover: 1, numMrWhite: 0, clueSeconds: 30 },
+    });
+  }
 
   return { code, playerId };
 }
@@ -311,4 +320,129 @@ export async function replayRoom(code, room, animeList) {
 // Retour au salon pour reconfigurer (mêmes joueurs, on garde les réglages).
 export async function backToLobby(code) {
   await update(ref(db, `rooms/${code}`), { phase: 'lobby', game: null });
+}
+
+// ==========================================================================
+// Chapitre 02 — « Devine la règle »
+// ==========================================================================
+
+// Réservé à l'hôte : lance la partie, chaque joueur va devoir écrire sa
+// règle secrète.
+export async function startRuleGame(code, room) {
+  const playerIds = Object.keys(room.players || {});
+  await update(ref(db, `rooms/${code}`), {
+    phase: 'ruleSetup',
+    rule: {
+      rules: {},
+      ready: {},
+      turnOrder: shuffle(playerIds),
+      turnIndex: 0,
+      log: {},
+      logOrder: [],
+      pendingPropose: null,
+      pendingGuess: null,
+      revealed: {},
+    },
+  });
+}
+
+// Enregistre la règle secrète d'un joueur.
+export async function submitRule(code, playerId, ruleText) {
+  await update(ref(db, `rooms/${code}`), {
+    [`rule/rules/${playerId}`]: ruleText.trim(),
+    [`rule/ready/${playerId}`]: true,
+  });
+}
+
+// Réservé à l'hôte : une fois tout le monde prêt, démarre le premier tour.
+export async function startRulePlay(code) {
+  await update(ref(db, `rooms/${code}`), { phase: 'rulePlay' });
+}
+
+function nextTurnIndex(room) {
+  const total = room.rule.turnOrder.length;
+  return (room.rule.turnIndex + 1) % total;
+}
+
+function newLogId() {
+  return 'l_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// Le joueur dont c'est le tour propose un personnage : tous les autres
+// joueurs devront ensuite dire, chacun selon sa propre règle secrète, si ce
+// personnage correspond ou non.
+export async function proposeCharacter(code, room, playerId, character) {
+  const current = room.rule.turnOrder[room.rule.turnIndex];
+  if (current !== playerId) return;
+  await update(ref(db, `rooms/${code}`), {
+    'rule/pendingPropose': { by: playerId, character: character.trim(), answers: {} },
+  });
+}
+
+// Un joueur (autre que le proposeur) répond, selon SA propre règle secrète,
+// si le personnage proposé correspond ou non.
+export async function answerProposal(code, room, playerId, matches) {
+  const pending = room.rule.pendingPropose;
+  if (!pending || playerId === pending.by) return;
+
+  await set(ref(db, `rooms/${code}/rule/pendingPropose/answers/${playerId}`), matches);
+
+  const players = Object.keys(room.players || {});
+  const expected = players.filter((id) => id !== pending.by);
+  const already = Object.keys(pending.answers || {});
+  const willHaveAll = expected.every((id) => id === playerId || already.includes(id));
+
+  if (willHaveAll) {
+    const finalAnswers = { ...pending.answers, [playerId]: matches };
+    const logId = newLogId();
+    await update(ref(db, `rooms/${code}`), {
+      [`rule/log/${logId}`]: { type: 'propose', by: pending.by, character: pending.character, answers: finalAnswers },
+      'rule/logOrder': [...(room.rule.logOrder || []), logId],
+      'rule/pendingPropose': null,
+      'rule/turnIndex': nextTurnIndex(room),
+    });
+  }
+}
+
+// Le joueur dont c'est le tour tente de deviner la règle d'un adversaire.
+export async function startGuess(code, room, playerId, targetId, guessText) {
+  const current = room.rule.turnOrder[room.rule.turnIndex];
+  if (current !== playerId || playerId === targetId) return;
+  await update(ref(db, `rooms/${code}`), {
+    'rule/pendingGuess': { by: playerId, target: targetId, guessText: guessText.trim() },
+  });
+}
+
+// Le joueur ciblé répond honnêtement si la règle devinée correspond à la
+// sienne.
+export async function answerGuess(code, room, playerId, correct) {
+  const pending = room.rule.pendingGuess;
+  if (!pending || playerId !== pending.target) return;
+
+  const logId = newLogId();
+  const updates = {
+    [`rule/log/${logId}`]: { type: 'guess', by: pending.by, target: pending.target, guessText: pending.guessText, correct },
+    'rule/logOrder': [...(room.rule.logOrder || []), logId],
+    'rule/pendingGuess': null,
+    'rule/turnIndex': nextTurnIndex(room),
+  };
+  if (correct) {
+    updates[`rule/revealed/${pending.target}`] = true;
+  }
+  await update(ref(db, `rooms/${code}`), updates);
+}
+
+// Réservé à l'hôte : termine la partie et révèle toutes les règles.
+export async function endRuleGame(code) {
+  await update(ref(db, `rooms/${code}`), { phase: 'ruleGameOver' });
+}
+
+// Relance une nouvelle manche avec les mêmes joueurs (nouvelles règles).
+export async function replayRuleGame(code, room) {
+  await startRuleGame(code, room);
+}
+
+// Retour au salon (Chapitre 02).
+export async function backToRuleLobby(code) {
+  await update(ref(db, `rooms/${code}`), { phase: 'lobby', rule: null });
 }

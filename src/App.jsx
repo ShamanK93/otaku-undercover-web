@@ -10,6 +10,10 @@ import ClueOrderScreen from './screens/ClueOrderScreen';
 import VoteScreen from './screens/VoteScreen';
 import EliminationScreen from './screens/EliminationScreen';
 import GameOverScreen from './screens/GameOverScreen';
+import RuleLobbyScreen from './screens/RuleLobbyScreen';
+import RuleSetupScreen from './screens/RuleSetupScreen';
+import RulePlayScreen from './screens/RulePlayScreen';
+import RuleGameOverScreen from './screens/RuleGameOverScreen';
 import AdSlot from './components/AdSlot';
 import { Analytics } from '@vercel/analytics/react';
 
@@ -38,6 +42,16 @@ import {
   continueAfterElimination,
   replayRoom,
   backToLobby,
+  startRuleGame,
+  submitRule,
+  startRulePlay,
+  proposeCharacter,
+  answerProposal,
+  startGuess,
+  answerGuess,
+  endRuleGame,
+  replayRuleGame,
+  backToRuleLobby,
 } from './utils/room';
 
 function PageDivider({ label }) {
@@ -50,6 +64,7 @@ function PageDivider({ label }) {
 
 export default function App() {
   const [view, setView] = useState('home'); // home | create | join
+  const [pendingGameType, setPendingGameType] = useState('undercover');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -92,7 +107,7 @@ export default function App() {
     setBusy(true);
     setError(null);
     try {
-      const { code: newCode } = await createRoom(name);
+      const { code: newCode } = await createRoom(name, pendingGameType);
       connectToRoom(newCode);
     } catch (e) {
       setError(e.message || 'Impossible de créer le salon.');
@@ -179,6 +194,18 @@ export default function App() {
     }
   }, [room, isHost, code]);
 
+  // Chapitre 02 : une fois tous les joueurs prêts (règle écrite), l'hôte
+  // lance automatiquement le premier tour.
+  useEffect(() => {
+    if (!room || !isHost || room.phase !== 'ruleSetup' || !room.rule) return;
+    const ids = Object.keys(room.players || {});
+    const ready = room.rule.ready || {};
+    const allReady = ids.length > 0 && ids.every((id) => ready[id]);
+    if (allReady) {
+      startRulePlay(code);
+    }
+  }, [room, isHost, code]);
+
   return (
     <div className="page-shell">
       <div className="page-row">
@@ -188,7 +215,10 @@ export default function App() {
 
         <div className={isHome ? 'main-col main-col--hub' : 'main-col'}>
         {!code && view === 'home' && (
-          <HomeScreen onCreate={() => setView('create')} onJoin={() => setView('join')} />
+          <HomeScreen
+            onCreate={(gameType) => { setPendingGameType(gameType); setView('create'); }}
+            onJoin={(gameType) => { setPendingGameType(gameType); setView('join'); }}
+          />
         )}
 
         {!code && view === 'create' && (
@@ -228,75 +258,118 @@ export default function App() {
 
         {code && room && (
           <div className="game-panel">
-            {room.phase === 'lobby' && showAnimeSelect && (
-              <AnimeSelectionScreen
-                selectedIds={draftAnimeIds}
-                setSelectedIds={setDraftAnimeIds}
-                selectedTypes={draftTypes}
-                setSelectedTypes={setDraftTypes}
-                selectedDifficulties={draftDifficulties}
-                setSelectedDifficulties={setDraftDifficulties}
-                onBack={() => setShowAnimeSelect(false)}
-                onNext={confirmAnimeSelect}
-              />
-            )}
+            {room.gameType === 'rule' ? (
+              <>
+                {room.phase === 'lobby' && (
+                  <RuleLobbyScreen
+                    code={code}
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onStart={() => startRuleGame(code, room)}
+                    onLeave={handleLeave}
+                  />
+                )}
 
-            {room.phase === 'lobby' && !showAnimeSelect && (
-              <LobbyScreen
-                code={code}
-                room={room}
-                playerId={playerId}
-                isHost={isHost}
-                onOpenAnimeSelect={openAnimeSelect}
-                onChangeSettings={(next) => setSettings(code, next)}
-                onStart={() => startGame(code, room, ANIME_LIST)}
-                onLeave={handleLeave}
-              />
-            )}
+                {room.phase === 'ruleSetup' && room.rule && (
+                  <RuleSetupScreen room={room} playerId={playerId} onSubmit={(text) => submitRule(code, playerId, text)} />
+                )}
 
-            {room.phase === 'reveal' && room.game && (
-              <RoleRevealScreen room={room} playerId={playerId} onReady={() => markReady(code, playerId)} />
-            )}
+                {room.phase === 'rulePlay' && room.rule && (
+                  <RulePlayScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onProposeCharacter={(character) => proposeCharacter(code, room, playerId, character)}
+                    onAnswerProposal={(matches) => answerProposal(code, room, playerId, matches)}
+                    onStartGuess={(targetId, text) => startGuess(code, room, playerId, targetId, text)}
+                    onAnswerGuess={(correct) => answerGuess(code, room, playerId, correct)}
+                    onEndGame={() => endRuleGame(code)}
+                  />
+                )}
 
-            {room.phase === 'clues' && room.game && (
-              <ClueOrderScreen
-                room={room}
-                playerId={playerId}
-                isHost={isHost}
-                onSubmitClue={(text) => submitClue(code, room, playerId, text)}
-                onForceSkip={() => forceSkipClueTurn(code, room)}
-                onNewRound={() => startCluePhase(code, room)}
-                onProceedVote={() => proceedToVote(code)}
-              />
-            )}
+                {room.phase === 'ruleGameOver' && room.rule && (
+                  <RuleGameOverScreen
+                    room={room}
+                    isHost={isHost}
+                    onReplay={() => replayRuleGame(code, room)}
+                    onBackToLobby={() => backToRuleLobby(code)}
+                  />
+                )}
+              </>
+            ) : (
+              <>
+                {room.phase === 'lobby' && showAnimeSelect && (
+                  <AnimeSelectionScreen
+                    selectedIds={draftAnimeIds}
+                    setSelectedIds={setDraftAnimeIds}
+                    selectedTypes={draftTypes}
+                    setSelectedTypes={setDraftTypes}
+                    selectedDifficulties={draftDifficulties}
+                    setSelectedDifficulties={setDraftDifficulties}
+                    onBack={() => setShowAnimeSelect(false)}
+                    onNext={confirmAnimeSelect}
+                  />
+                )}
 
-            {room.phase === 'vote' && room.game && (
-              <VoteScreen
-                room={room}
-                playerId={playerId}
-                isHost={isHost}
-                onCastVote={(targetId) => castVote(code, playerId, targetId)}
-                onFinalize={() => finalizeVote(code, room)}
-              />
-            )}
+                {room.phase === 'lobby' && !showAnimeSelect && (
+                  <LobbyScreen
+                    code={code}
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onOpenAnimeSelect={openAnimeSelect}
+                    onChangeSettings={(next) => setSettings(code, next)}
+                    onStart={() => startGame(code, room, ANIME_LIST)}
+                    onLeave={handleLeave}
+                  />
+                )}
 
-            {room.phase === 'elimination' && room.game && (
-              <EliminationScreen
-                room={room}
-                playerId={playerId}
-                isHost={isHost}
-                onMrWhiteGuess={(correct) => submitMrWhiteGuess(code, room, correct)}
-                onContinue={() => continueAfterElimination(code, room)}
-              />
-            )}
+                {room.phase === 'reveal' && room.game && (
+                  <RoleRevealScreen room={room} playerId={playerId} onReady={() => markReady(code, playerId)} />
+                )}
 
-            {room.phase === 'gameover' && room.game && (
-              <GameOverScreen
-                room={room}
-                isHost={isHost}
-                onReplay={() => replayRoom(code, room, ANIME_LIST)}
-                onBackToLobby={() => backToLobby(code)}
-              />
+                {room.phase === 'clues' && room.game && (
+                  <ClueOrderScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onSubmitClue={(text) => submitClue(code, room, playerId, text)}
+                    onForceSkip={() => forceSkipClueTurn(code, room)}
+                    onNewRound={() => startCluePhase(code, room)}
+                    onProceedVote={() => proceedToVote(code)}
+                  />
+                )}
+
+                {room.phase === 'vote' && room.game && (
+                  <VoteScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onCastVote={(targetId) => castVote(code, playerId, targetId)}
+                    onFinalize={() => finalizeVote(code, room)}
+                  />
+                )}
+
+                {room.phase === 'elimination' && room.game && (
+                  <EliminationScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onMrWhiteGuess={(correct) => submitMrWhiteGuess(code, room, correct)}
+                    onContinue={() => continueAfterElimination(code, room)}
+                  />
+                )}
+
+                {room.phase === 'gameover' && room.game && (
+                  <GameOverScreen
+                    room={room}
+                    isHost={isHost}
+                    onReplay={() => replayRoom(code, room, ANIME_LIST)}
+                    onBackToLobby={() => backToLobby(code)}
+                  />
+                )}
+              </>
             )}
             <PageDivider label="OTAKU UNDERCOVER" />
           </div>
