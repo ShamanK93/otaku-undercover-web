@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import PrimaryButton from '../components/PrimaryButton';
+import Stepper from '../components/Stepper';
 import PlayerAvatar from '../components/PlayerAvatar';
 import { getInviteLink } from '../utils/room';
 
-export default function RuleLobbyScreen({ code, room, playerId, isHost, onStart, onLeave }) {
+export default function RuleLobbyScreen({ code, room, playerId, isHost, onChangeSettings, onStart, onLeave }) {
   const [copied, setCopied] = useState(null);
   const players = Object.entries(room.players || {}).map(([id, p]) => ({ id, ...p }));
   const numPlayers = players.length;
@@ -56,6 +57,14 @@ export default function RuleLobbyScreen({ code, room, playerId, isHost, onStart,
 
       {isHost ? (
         <div className="lobby-host-controls">
+          <Stepper
+            label="Temps par action (secondes)"
+            value={(room.settings && room.settings.actionSeconds) || 30}
+            min={10}
+            max={120}
+            step={5}
+            onChange={(v) => onChangeSettings({ actionSeconds: v })}
+          />
           {numPlayers < 2 && (
             <p className="lobby-hint">Il faut au moins 2 joueurs pour lancer la partie.</p>
           )}

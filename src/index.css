@@ -809,5 +809,15 @@ img { max-width: 100%; display: block; }
 
 /* ---------- Loading ---------- */
 
-.loading-screen { min-height: 60vh; display: flex; align-items: center; justify-content: center; }
-.loading-mascot { width: 100px; }
+/* ---------- Rappel de règle secrète (Chapitre 02) ---------- */
+
+.rule-reminder {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: rgba(232, 93, 130, 0.12); border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 14px;
+}
+.rule-reminder-label {
+  color: var(--color-primary); font-weight: 800; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 1px; flex-shrink: 0;
+}
+.rule-reminder-text { color: var(--color-text); font-weight: 600; font-size: 13px; text-align: right; }

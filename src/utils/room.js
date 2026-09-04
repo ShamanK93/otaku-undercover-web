@@ -63,7 +63,7 @@ export async function createRoom(hostName, gameType = 'undercover') {
   };
 
   if (gameType === 'rule') {
-    await set(ref(db, `rooms/${code}`), base);
+    await set(ref(db, `rooms/${code}`), { ...base, settings: { actionSeconds: 30 } });
   } else {
     await set(ref(db, `rooms/${code}`), {
       ...base,
@@ -326,12 +326,18 @@ export async function backToLobby(code) {
 // Chapitre 02 — « Devine la règle »
 // ==========================================================================
 
+function actionDeadline(room) {
+  const seconds = (room.settings && room.settings.actionSeconds) || 30;
+  return Date.now() + seconds * 1000;
+}
+
 // Réservé à l'hôte : lance la partie, chaque joueur va devoir écrire sa
 // règle secrète.
 export async function startRuleGame(code, room) {
   const playerIds = Object.keys(room.players || {});
   await update(ref(db, `rooms/${code}`), {
     phase: 'ruleSetup',
+    settings: { actionSeconds: (room.settings && room.settings.actionSeconds) || 30 },
     rule: {
       rules: {},
       ready: {},
@@ -341,9 +347,16 @@ export async function startRuleGame(code, room) {
       logOrder: [],
       pendingPropose: null,
       pendingGuess: null,
+      revengePending: null,
       revealed: {},
+      outcome: null,
+      deadline: null,
     },
   });
+}
+
+export async function setRuleSettings(code, settings) {
+  await update(ref(db, `rooms/${code}/settings`), settings);
 }
 
 // Enregistre la règle secrète d'un joueur.
@@ -355,17 +368,43 @@ export async function submitRule(code, playerId, ruleText) {
 }
 
 // Réservé à l'hôte : une fois tout le monde prêt, démarre le premier tour.
-export async function startRulePlay(code) {
-  await update(ref(db, `rooms/${code}`), { phase: 'rulePlay' });
+export async function startRulePlay(code, room) {
+  await update(ref(db, `rooms/${code}`), {
+    phase: 'rulePlay',
+    'rule/deadline': actionDeadline(room),
+  });
 }
 
+// Prochain joueur dans l'ordre des tours, en sautant ceux dont la règle a
+// déjà été devinée (ils sont hors-jeu).
 function nextTurnIndex(room) {
-  const total = room.rule.turnOrder.length;
-  return (room.rule.turnIndex + 1) % total;
+  const order = room.rule.turnOrder;
+  const total = order.length;
+  const revealed = room.rule.revealed || {};
+  let idx = room.rule.turnIndex;
+  for (let i = 0; i < total; i++) {
+    idx = (idx + 1) % total;
+    if (!revealed[order[idx]]) return idx;
+  }
+  return room.rule.turnIndex;
+}
+
+function aliveIds(room) {
+  const revealed = room.rule.revealed || {};
+  return Object.keys(room.players || {}).filter((id) => !revealed[id]);
 }
 
 function newLogId() {
   return 'l_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// Réservé à l'hôte : si un joueur laisse filer son tour (minuteur écoulé),
+// passe simplement au suivant.
+export async function skipTurn(code, room) {
+  await update(ref(db, `rooms/${code}`), {
+    'rule/turnIndex': nextTurnIndex(room),
+    'rule/deadline': actionDeadline(room),
+  });
 }
 
 // Le joueur dont c'est le tour propose un personnage : tous les autres
@@ -376,6 +415,7 @@ export async function proposeCharacter(code, room, playerId, character) {
   if (current !== playerId) return;
   await update(ref(db, `rooms/${code}`), {
     'rule/pendingPropose': { by: playerId, character: character.trim(), answers: {} },
+    'rule/deadline': actionDeadline(room),
   });
 }
 
@@ -400,6 +440,7 @@ export async function answerProposal(code, room, playerId, matches) {
       'rule/logOrder': [...(room.rule.logOrder || []), logId],
       'rule/pendingPropose': null,
       'rule/turnIndex': nextTurnIndex(room),
+      'rule/deadline': actionDeadline(room),
     });
   }
 }
@@ -410,31 +451,106 @@ export async function startGuess(code, room, playerId, targetId, guessText) {
   if (current !== playerId || playerId === targetId) return;
   await update(ref(db, `rooms/${code}`), {
     'rule/pendingGuess': { by: playerId, target: targetId, guessText: guessText.trim() },
+    'rule/deadline': actionDeadline(room),
+  });
+}
+
+// À 2 joueurs seulement : juste après s'être fait deviner sa règle, le
+// joueur visé a une unique chance immédiate de deviner en retour la règle
+// de son adversaire, pour faire égalité.
+export async function startRevengeGuess(code, room, defenderId, guessText) {
+  const revenge = room.rule.revengePending;
+  if (!revenge || revenge.defenderId !== defenderId) return;
+  await update(ref(db, `rooms/${code}`), {
+    'rule/pendingGuess': { by: defenderId, target: revenge.attackerId, guessText: guessText.trim(), isRevenge: true },
+    'rule/deadline': actionDeadline(room),
   });
 }
 
 // Le joueur ciblé répond honnêtement si la règle devinée correspond à la
-// sienne.
+// sienne. Gère aussi les conditions de victoire (2 joueurs avec revanche,
+// 3+ joueurs avec dernier survivant).
 export async function answerGuess(code, room, playerId, correct) {
   const pending = room.rule.pendingGuess;
   if (!pending || playerId !== pending.target) return;
 
+  const totalPlayers = Object.keys(room.players || {}).length;
   const logId = newLogId();
+  const logEntry = { type: 'guess', by: pending.by, target: pending.target, guessText: pending.guessText, correct };
+
+  // Réponse à une revanche (2 joueurs) : la partie se termine ici, quoi
+  // qu'il arrive.
+  if (pending.isRevenge) {
+    const updates = {
+      [`rule/log/${logId}`]: logEntry,
+      'rule/logOrder': [...(room.rule.logOrder || []), logId],
+      'rule/pendingGuess': null,
+      'rule/revengePending': null,
+      'rule/deadline': null,
+      phase: 'ruleGameOver',
+    };
+    if (correct) {
+      updates[`rule/revealed/${pending.target}`] = true; // l'attaquant aussi démasqué
+      updates['rule/outcome'] = { type: 'tie' };
+    } else {
+      updates['rule/outcome'] = { type: 'winner', winnerId: pending.target }; // l'attaquant l'emporte
+    }
+    await update(ref(db, `rooms/${code}`), updates);
+    return;
+  }
+
+  // Deviné à tort : la partie continue normalement.
+  if (!correct) {
+    await update(ref(db, `rooms/${code}`), {
+      [`rule/log/${logId}`]: logEntry,
+      'rule/logOrder': [...(room.rule.logOrder || []), logId],
+      'rule/pendingGuess': null,
+      'rule/turnIndex': nextTurnIndex(room),
+      'rule/deadline': actionDeadline(room),
+    });
+    return;
+  }
+
+  // Deviné juste.
+  if (totalPlayers === 2) {
+    // Le joueur démasqué a une chance immédiate de faire égalité.
+    await update(ref(db, `rooms/${code}`), {
+      [`rule/log/${logId}`]: logEntry,
+      'rule/logOrder': [...(room.rule.logOrder || []), logId],
+      'rule/pendingGuess': null,
+      [`rule/revealed/${pending.target}`]: true,
+      'rule/revengePending': { attackerId: pending.by, defenderId: pending.target },
+      'rule/deadline': actionDeadline(room),
+    });
+    return;
+  }
+
+  // 3 joueurs ou plus : le joueur démasqué sort du jeu ; s'il ne reste
+  // qu'un seul joueur avec sa règle intacte, il gagne.
+  const stillAlive = aliveIds(room).filter((id) => id !== pending.target);
   const updates = {
-    [`rule/log/${logId}`]: { type: 'guess', by: pending.by, target: pending.target, guessText: pending.guessText, correct },
+    [`rule/log/${logId}`]: logEntry,
     'rule/logOrder': [...(room.rule.logOrder || []), logId],
     'rule/pendingGuess': null,
-    'rule/turnIndex': nextTurnIndex(room),
+    [`rule/revealed/${pending.target}`]: true,
   };
-  if (correct) {
-    updates[`rule/revealed/${pending.target}`] = true;
+  if (stillAlive.length <= 1) {
+    updates.phase = 'ruleGameOver';
+    updates['rule/deadline'] = null;
+    updates['rule/outcome'] = stillAlive.length === 1
+      ? { type: 'winner', winnerId: stillAlive[0] }
+      : { type: 'tie' };
+  } else {
+    updates['rule/turnIndex'] = nextTurnIndex(room);
+    updates['rule/deadline'] = actionDeadline(room);
   }
   await update(ref(db, `rooms/${code}`), updates);
 }
 
-// Réservé à l'hôte : termine la partie et révèle toutes les règles.
+// Réservé à l'hôte : termine la partie manuellement et révèle toutes les
+// règles (sans vainqueur désigné).
 export async function endRuleGame(code) {
-  await update(ref(db, `rooms/${code}`), { phase: 'ruleGameOver' });
+  await update(ref(db, `rooms/${code}`), { phase: 'ruleGameOver', 'rule/deadline': null });
 }
 
 // Relance une nouvelle manche avec les mêmes joueurs (nouvelles règles).

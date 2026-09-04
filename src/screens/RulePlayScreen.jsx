@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PrimaryButton from '../components/PrimaryButton';
 
 export default function RulePlayScreen({
@@ -8,7 +8,9 @@ export default function RulePlayScreen({
   onProposeCharacter,
   onAnswerProposal,
   onStartGuess,
+  onStartRevengeGuess,
   onAnswerGuess,
+  onSkipTurn,
   onEndGame,
 }) {
   const players = room.players || {};
@@ -18,13 +20,59 @@ export default function RulePlayScreen({
   const isMyTurn = currentPlayerId === playerId;
   const pendingPropose = room.rule.pendingPropose;
   const pendingGuess = room.rule.pendingGuess;
+  const revengePending = room.rule.revengePending;
   const log = room.rule.log || {};
   const logOrder = room.rule.logOrder || [];
+  const myRule = (room.rule.rules || {})[playerId];
+  const revealed = room.rule.revealed || {};
 
   const [mode, setMode] = useState(null); // null | 'propose' | 'guess'
   const [character, setCharacter] = useState('');
   const [guessTarget, setGuessTarget] = useState('');
   const [guessText, setGuessText] = useState('');
+  const [revengeText, setRevengeText] = useState('');
+  const [now, setNow] = useState(Date.now());
+  const autoActed = useRef(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(interval);
+  }, []);
+
+  const deadline = room.rule.deadline;
+  const remaining = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : null;
+
+  const iAlreadyAnsweredProposal = pendingPropose && pendingPropose.answers && pendingPropose.answers[playerId] !== undefined;
+  const iMustAnswerProposal = pendingPropose && pendingPropose.by !== playerId && !iAlreadyAnsweredProposal;
+  const iMustAnswerGuess = pendingGuess && pendingGuess.target === playerId;
+  const iMustDoRevenge = revengePending && revengePending.defenderId === playerId && !pendingGuess;
+  const iMustAct = (isMyTurn && !pendingPropose && !pendingGuess && !revengePending) || iMustAnswerProposal || iMustAnswerGuess || iMustDoRevenge;
+
+  // Reset l'état local et le verrou d'auto-action à chaque nouvelle échéance.
+  useEffect(() => {
+    autoActed.current = null;
+    setMode(null);
+    setCharacter('');
+    setGuessTarget('');
+    setGuessText('');
+    setRevengeText('');
+  }, [turnIndex, pendingPropose && pendingPropose.by, pendingGuess && pendingGuess.guessText, revengePending && revengePending.defenderId]);
+
+  // Minuteur écoulé : chacun agit automatiquement pour ce qu'on attend de
+  // lui (sans action par défaut possible, on passe simplement).
+  useEffect(() => {
+    if (remaining !== 0 || !iMustAct || autoActed.current) return;
+    autoActed.current = true;
+    if (iMustAnswerProposal) {
+      onAnswerProposal(false);
+    } else if (iMustAnswerGuess) {
+      onAnswerGuess(false);
+    } else if (iMustDoRevenge) {
+      onStartRevengeGuess('(temps écoulé)');
+    } else if (isMyTurn && !pendingPropose && !pendingGuess && !revengePending) {
+      onSkipTurn();
+    }
+  }, [remaining, iMustAct, iMustAnswerProposal, iMustAnswerGuess, iMustDoRevenge, isMyTurn, pendingPropose, pendingGuess, revengePending, onAnswerProposal, onAnswerGuess, onStartRevengeGuess, onSkipTurn]);
 
   function resetLocal() {
     setMode(null);
@@ -45,13 +93,62 @@ export default function RulePlayScreen({
     resetLocal();
   }
 
+  function submitRevenge() {
+    if (!revengeText.trim()) return;
+    onStartRevengeGuess(revengeText);
+    setRevengeText('');
+  }
+
   const otherPlayerIds = Object.keys(players).filter((id) => id !== playerId);
-  const iAlreadyAnsweredProposal = pendingPropose && pendingPropose.answers && pendingPropose.answers[playerId] !== undefined;
 
   return (
     <div className="screen">
+      {myRule && (
+        <div className="rule-reminder">
+          <span className="rule-reminder-label">Ta règle</span>
+          <span className="rule-reminder-text">« {myRule} »</span>
+        </div>
+      )}
+
       <p style={{ color: 'var(--color-secondary)', fontWeight: 700, marginBottom: 4 }}>Devine la règle</p>
       <h2 className="screen-title">Tour de {players[currentPlayerId]?.name}</h2>
+
+      {remaining !== null && (
+        <div className={`clue-timer${remaining <= 5 ? ' clue-timer--low' : ''}`} style={{ marginBottom: 8 }}>
+          {remaining}s
+        </div>
+      )}
+
+      {/* Revanche à 2 joueurs : le joueur démasqué a une chance de faire égalité */}
+      {revengePending && !pendingGuess && (
+        <div className="clue-turn-box" style={{ marginBottom: 16 }}>
+          <p style={{ textAlign: 'center', fontWeight: 700, marginBottom: 10 }}>
+            {players[revengePending.defenderId]?.name} a été démasqué !
+          </p>
+          {revengePending.defenderId === playerId ? (
+            <>
+              <p style={{ textAlign: 'center', color: 'var(--color-muted)', fontSize: 13, marginBottom: 10 }}>
+                Dernière chance : devine la règle de {players[revengePending.attackerId]?.name} pour faire égalité.
+              </p>
+              <input
+                type="text"
+                className="text-input"
+                style={{ width: '100%', textAlign: 'center', marginBottom: 12 }}
+                placeholder="Ta proposition de règle..."
+                value={revengeText}
+                autoFocus
+                onChange={(e) => setRevengeText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitRevenge()}
+              />
+              <PrimaryButton title="Tenter l'égalité" onClick={submitRevenge} disabled={!revengeText.trim()} />
+            </>
+          ) : (
+            <p className="lobby-waiting">
+              {players[revengePending.defenderId]?.name} tente une dernière règle pour faire égalité...
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Une proposition de personnage est en attente de validation */}
       {pendingPropose && (
@@ -96,7 +193,7 @@ export default function RulePlayScreen({
       )}
 
       {/* C'est mon tour, aucune action en attente : je choisis quoi faire */}
-      {!pendingPropose && !pendingGuess && isMyTurn && mode === null && (
+      {!pendingPropose && !pendingGuess && !revengePending && isMyTurn && mode === null && (
         <div className="clue-turn-box" style={{ marginBottom: 16 }}>
           <p style={{ textAlign: 'center', fontWeight: 700, marginBottom: 12 }}>C'est ton tour, que fais-tu ?</p>
           <PrimaryButton title="Proposer un personnage" onClick={() => setMode('propose')} style={{ marginBottom: 10 }} />
@@ -104,7 +201,7 @@ export default function RulePlayScreen({
         </div>
       )}
 
-      {!pendingPropose && !pendingGuess && isMyTurn && mode === 'propose' && (
+      {!pendingPropose && !pendingGuess && !revengePending && isMyTurn && mode === 'propose' && (
         <div className="clue-turn-box" style={{ marginBottom: 16 }}>
           <p style={{ textAlign: 'center', fontWeight: 700, marginBottom: 10 }}>Quel personnage proposes-tu ?</p>
           <input
@@ -122,11 +219,11 @@ export default function RulePlayScreen({
         </div>
       )}
 
-      {!pendingPropose && !pendingGuess && isMyTurn && mode === 'guess' && (
+      {!pendingPropose && !pendingGuess && !revengePending && isMyTurn && mode === 'guess' && (
         <div className="clue-turn-box" style={{ marginBottom: 16 }}>
           <p style={{ textAlign: 'center', fontWeight: 700, marginBottom: 10 }}>Qui vises-tu ?</p>
           <div className="screen-list" style={{ marginBottom: 12, maxHeight: 160 }}>
-            {otherPlayerIds.map((id) => (
+            {otherPlayerIds.filter((id) => !revealed[id]).map((id) => (
               <button
                 type="button"
                 key={id}
@@ -150,7 +247,7 @@ export default function RulePlayScreen({
         </div>
       )}
 
-      {!pendingPropose && !pendingGuess && !isMyTurn && (
+      {!pendingPropose && !pendingGuess && !revengePending && !isMyTurn && (
         <p className="lobby-waiting" style={{ marginBottom: 16 }}>
           En attente du tour de {players[currentPlayerId]?.name}...
         </p>

@@ -43,11 +43,14 @@ import {
   replayRoom,
   backToLobby,
   startRuleGame,
+  setRuleSettings,
   submitRule,
   startRulePlay,
+  skipTurn,
   proposeCharacter,
   answerProposal,
   startGuess,
+  startRevengeGuess,
   answerGuess,
   endRuleGame,
   replayRuleGame,
@@ -202,7 +205,7 @@ export default function App() {
     const ready = room.rule.ready || {};
     const allReady = ids.length > 0 && ids.every((id) => ready[id]);
     if (allReady) {
-      startRulePlay(code);
+      startRulePlay(code, room);
     }
   }, [room, isHost, code]);
 
@@ -266,6 +269,7 @@ export default function App() {
                     room={room}
                     playerId={playerId}
                     isHost={isHost}
+                    onChangeSettings={(next) => setRuleSettings(code, next)}
                     onStart={() => startRuleGame(code, room)}
                     onLeave={handleLeave}
                   />
@@ -283,7 +287,9 @@ export default function App() {
                     onProposeCharacter={(character) => proposeCharacter(code, room, playerId, character)}
                     onAnswerProposal={(matches) => answerProposal(code, room, playerId, matches)}
                     onStartGuess={(targetId, text) => startGuess(code, room, playerId, targetId, text)}
+                    onStartRevengeGuess={(text) => startRevengeGuess(code, room, playerId, text)}
                     onAnswerGuess={(correct) => answerGuess(code, room, playerId, correct)}
+                    onSkipTurn={() => skipTurn(code, room)}
                     onEndGame={() => endRuleGame(code)}
                   />
                 )}
