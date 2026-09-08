@@ -64,6 +64,12 @@ export async function createRoom(hostName, gameType = 'undercover') {
 
   if (gameType === 'rule') {
     await set(ref(db, `rooms/${code}`), { ...base, settings: { actionSeconds: 30 } });
+  } else if (gameType === 'team') {
+    await set(ref(db, `rooms/${code}`), {
+      ...base,
+      selectedAnimeIds: {},
+      settings: { blindMode: false },
+    });
   } else {
     await set(ref(db, `rooms/${code}`), {
       ...base,
@@ -561,4 +567,326 @@ export async function replayRuleGame(code, room) {
 // Retour au salon (Chapitre 02).
 export async function backToRuleLobby(code) {
   await update(ref(db, `rooms/${code}`), { phase: 'lobby', rule: null });
+}
+
+// ==========================================================================
+// Chapitre 03 — « Construis ta team »
+// ==========================================================================
+
+const STARTING_BUDGET = 20;
+const TEAM_SIZE = 5;
+
+function buildTeamPool(characterDb, selectedAnimeIds) {
+  const pool = [];
+  characterDb.forEach((anime) => {
+    if (!selectedAnimeIds.includes(anime.id)) return;
+    anime.characters.forEach((name) => {
+      pool.push({ name, anime: anime.title });
+    });
+  });
+  return shuffle(pool);
+}
+
+// Réservé à l'hôte : lance la partie (2 joueurs ou plus).
+export async function startTeamGame(code, room, characterDb) {
+  const playerIds = Object.keys(room.players || {});
+  const selectedAnimeIds = Object.keys(room.selectedAnimeIds || {});
+  const pool = buildTeamPool(characterDb, selectedAnimeIds);
+
+  const budgets = {};
+  const teams = {};
+  playerIds.forEach((id) => {
+    budgets[id] = STARTING_BUDGET;
+    teams[id] = [];
+  });
+
+  await update(ref(db, `rooms/${code}`), {
+    phase: 'teamPlay',
+    team: {
+      budgets,
+      teams,
+      pool,
+      turnOrder: shuffle(playerIds),
+      turnIndex: 0,
+      blindMode: Boolean(room.settings && room.settings.blindMode),
+      currentDraw: null,
+      log: {},
+      logOrder: [],
+      votes: null,
+      outcome: null,
+    },
+  });
+}
+
+export async function setTeamSettings(code, settings) {
+  await update(ref(db, `rooms/${code}/settings`), settings);
+}
+
+function teamNewLogId() {
+  return 'l_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function isBankrupt(room, playerId) {
+  const budget = room.team.budgets[playerId];
+  const teamSize = (room.team.teams[playerId] || []).length;
+  return budget <= 0 && teamSize < TEAM_SIZE;
+}
+
+// La partie doit-elle s'arrêter (équipes complètes, pioche vide, ou plus
+// personne ne peut acquérir de personnage) ?
+function teamGameShouldEnd(room) {
+  const playerIds = Object.keys(room.players || {});
+  const allFull = playerIds.every((id) => (room.team.teams[id] || []).length >= TEAM_SIZE);
+  const poolEmpty = room.team.pool.length === 0;
+  const allStuck = playerIds.every((id) => isBankrupt(room, id));
+  return allFull || poolEmpty || allStuck;
+}
+
+function nextTeamTurnIndex(room) {
+  return (room.team.turnIndex + 1) % room.team.turnOrder.length;
+}
+
+// Prochain joueur (dans l'ordre du salon) encore en lice pour cette
+// enchère : ni celui qui a la meilleure offre, ni ceux qui ont déjà passé.
+function nextChallenger(playerIds, passedBy, highestBidder, afterId) {
+  const total = playerIds.length;
+  const startIdx = playerIds.indexOf(afterId);
+  for (let i = 1; i <= total; i++) {
+    const candidate = playerIds[(startIdx + i) % total];
+    if (candidate !== highestBidder && !passedBy[candidate]) return candidate;
+  }
+  return null; // plus aucun challenger : l'enchère est déjà terminée
+}
+
+// Le joueur dont c'est le tour pioche un personnage dans le pool restant.
+// Si LUI-MÊME est en faillite, le personnage part directement en mode vol
+// (il ne peut plus fixer de mise de départ).
+export async function drawCharacter(code, room, playerId) {
+  const current = room.team.turnOrder[room.team.turnIndex];
+  if (current !== playerId || room.team.currentDraw || room.team.pool.length === 0) return;
+
+  const pool = [...room.team.pool];
+  const idx = Math.floor(Math.random() * pool.length);
+  const character = pool[idx];
+  pool.splice(idx, 1);
+
+  const playerIds = Object.keys(room.players || {});
+  const drawerBankrupt = isBankrupt(room, playerId);
+
+  if (drawerBankrupt) {
+    const eligible = playerIds.filter((id) => id !== playerId && room.team.budgets[id] >= 1);
+    if (eligible.length === 0) {
+      // Personne ne peut se le permettre : le personnage est perdu, on
+      // enchaîne directement sur le joueur suivant.
+      const logId = teamNewLogId();
+      const projected = { ...room, team: { ...room.team, pool } };
+      const updates = {
+        [`team/log/${logId}`]: { type: 'discard', character },
+        'team/logOrder': [...(room.team.logOrder || []), logId],
+        'team/pool': pool,
+      };
+      if (teamGameShouldEnd(projected)) {
+        updates.phase = 'teamGameOver';
+        updates['team/votes'] = {};
+      } else {
+        updates['team/turnIndex'] = nextTeamTurnIndex(room);
+      }
+      await update(ref(db, `rooms/${code}`), updates);
+      return;
+    }
+    await update(ref(db, `rooms/${code}`), {
+      'team/pool': pool,
+      'team/currentDraw': { character, drawnBy: playerId, mode: 'steal', eligibleIds: eligible, passedBy: {} },
+    });
+    return;
+  }
+
+  await update(ref(db, `rooms/${code}`), {
+    'team/pool': pool,
+    'team/currentDraw': {
+      character, drawnBy: playerId, mode: 'bid',
+      highestBid: 0, highestBidder: null, passedBy: {}, turnToAct: null,
+      blind: Boolean(room.team.blindMode),
+    },
+  });
+}
+
+// Le joueur qui a pioché fixe sa mise de départ.
+export async function setStartingBid(code, room, playerId, amount) {
+  const draw = room.team.currentDraw;
+  if (!draw || draw.mode !== 'bid' || draw.drawnBy !== playerId || draw.highestBid !== 0) return;
+  const budget = room.team.budgets[playerId];
+  const bid = Math.max(1, Math.min(Math.floor(amount), budget));
+
+  const playerIds = room.team.turnOrder;
+  const nextId = nextChallenger(playerIds, {}, playerId, playerId);
+
+  const updates = {
+    'team/currentDraw/highestBid': bid,
+    'team/currentDraw/highestBidder': playerId,
+  };
+  if (nextId) {
+    updates['team/currentDraw/turnToAct'] = nextId;
+    await update(ref(db, `rooms/${code}`), updates);
+  } else {
+    // Personne d'autre ne peut enchérir (seul joueur, ou tous ruinés) :
+    // le tireur remporte directement au prix de sa mise de départ.
+    await resolveAuctionWin(code, room, playerId, bid, draw.character);
+  }
+}
+
+async function resolveAuctionWin(code, room, winnerId, price, character) {
+  const nextBudgets = { ...room.team.budgets, [winnerId]: room.team.budgets[winnerId] - price };
+  const nextTeams = { ...room.team.teams, [winnerId]: [...(room.team.teams[winnerId] || []), character] };
+  const logId = teamNewLogId();
+  const projected = { ...room, team: { ...room.team, budgets: nextBudgets, teams: nextTeams } };
+
+  const updates = {
+    [`team/log/${logId}`]: { type: 'win', playerId: winnerId, character, price },
+    'team/logOrder': [...(room.team.logOrder || []), logId],
+    'team/budgets': nextBudgets,
+    'team/teams': nextTeams,
+    'team/currentDraw': null,
+  };
+  if (teamGameShouldEnd(projected)) {
+    updates.phase = 'teamGameOver';
+    updates['team/votes'] = {};
+  } else {
+    updates['team/turnIndex'] = nextTeamTurnIndex(room);
+  }
+  await update(ref(db, `rooms/${code}`), updates);
+}
+
+// Le joueur dont c'est le tour de répondre surenchérit.
+export async function raiseBid(code, room, playerId, amount) {
+  const draw = room.team.currentDraw;
+  if (!draw || draw.mode !== 'bid' || draw.turnToAct !== playerId) return;
+  const budget = room.team.budgets[playerId];
+  const bid = Math.floor(amount);
+  if (bid <= draw.highestBid || bid > budget) return;
+
+  const nextId = nextChallenger(room.team.turnOrder, draw.passedBy || {}, playerId, playerId);
+
+  if (nextId) {
+    await update(ref(db, `rooms/${code}`), {
+      'team/currentDraw/highestBid': bid,
+      'team/currentDraw/highestBidder': playerId,
+      'team/currentDraw/turnToAct': nextId,
+    });
+  } else {
+    await resolveAuctionWin(code, room, playerId, bid, draw.character);
+  }
+}
+
+// Le joueur dont c'est le tour de répondre laisse l'enchère aux autres.
+export async function passAuction(code, room, playerId) {
+  const draw = room.team.currentDraw;
+  if (!draw || draw.mode !== 'bid' || draw.turnToAct !== playerId) return;
+
+  const nextPassedBy = { ...(draw.passedBy || {}), [playerId]: true };
+  const nextId = nextChallenger(room.team.turnOrder, nextPassedBy, draw.highestBidder, playerId);
+
+  if (nextId) {
+    await update(ref(db, `rooms/${code}`), {
+      'team/currentDraw/passedBy': nextPassedBy,
+      'team/currentDraw/turnToAct': nextId,
+    });
+  } else {
+    await resolveAuctionWin(code, room, draw.highestBidder, draw.highestBid, draw.character);
+  }
+}
+
+// Mode faillite : un des autres joueurs décide de voler le personnage
+// pioché pour 1€, ou de le laisser passer.
+export async function stealDecision(code, room, playerId, wantSteal) {
+  const draw = room.team.currentDraw;
+  if (!draw || draw.mode !== 'steal' || !draw.eligibleIds.includes(playerId)) return;
+
+  if (wantSteal) {
+    const nextBudgets = { ...room.team.budgets, [playerId]: Math.max(0, room.team.budgets[playerId] - 1) };
+    const nextTeams = { ...room.team.teams, [playerId]: [...(room.team.teams[playerId] || []), draw.character] };
+    const logId = teamNewLogId();
+    const projected = { ...room, team: { ...room.team, budgets: nextBudgets, teams: nextTeams } };
+
+    const updates = {
+      [`team/log/${logId}`]: { type: 'steal', playerId, character: draw.character },
+      'team/logOrder': [...(room.team.logOrder || []), logId],
+      'team/budgets': nextBudgets,
+      'team/teams': nextTeams,
+      'team/currentDraw': null,
+    };
+    if (teamGameShouldEnd(projected)) {
+      updates.phase = 'teamGameOver';
+      updates['team/votes'] = {};
+    } else {
+      updates['team/turnIndex'] = nextTeamTurnIndex(room);
+    }
+    await update(ref(db, `rooms/${code}`), updates);
+    return;
+  }
+
+  const nextPassedBy = { ...(draw.passedBy || {}), [playerId]: true };
+  const allPassed = draw.eligibleIds.every((id) => nextPassedBy[id]);
+
+  if (!allPassed) {
+    await update(ref(db, `rooms/${code}`), { 'team/currentDraw/passedBy': nextPassedBy });
+    return;
+  }
+
+  const logId = teamNewLogId();
+  const updates = {
+    [`team/log/${logId}`]: { type: 'discard', character: draw.character },
+    'team/logOrder': [...(room.team.logOrder || []), logId],
+    'team/currentDraw': null,
+  };
+  if (teamGameShouldEnd(room)) {
+    updates.phase = 'teamGameOver';
+    updates['team/votes'] = {};
+  } else {
+    updates['team/turnIndex'] = nextTeamTurnIndex(room);
+  }
+  await update(ref(db, `rooms/${code}`), updates);
+}
+
+// Réservé à l'hôte : termine la partie manuellement (passe directement au
+// vote, quel que soit l'état des équipes).
+export async function endTeamGame(code) {
+  await update(ref(db, `rooms/${code}`), { phase: 'teamGameOver', 'team/votes': {} });
+}
+
+// Un joueur vote pour l'équipe qu'il juge la meilleure (ou 'tie' pour
+// signaler une égalité à ses yeux). Une fois tout le monde voté, le
+// résultat est calculé.
+export async function castTeamVote(code, room, playerId, choice) {
+  const playerIds = Object.keys(room.players || {});
+  const nextVotes = { ...(room.team.votes || {}), [playerId]: choice };
+
+  const updates = { [`team/votes/${playerId}`]: choice };
+
+  const allVoted = playerIds.every((id) => nextVotes[id] !== undefined);
+  if (allVoted) {
+    const counts = {};
+    playerIds.forEach((id) => { counts[id] = 0; });
+    Object.values(nextVotes).forEach((c) => {
+      if (counts[c] !== undefined) counts[c] += 1;
+    });
+    const maxCount = Math.max(...playerIds.map((id) => counts[id]));
+    const topIds = playerIds.filter((id) => counts[id] === maxCount);
+    updates['team/outcome'] =
+      maxCount > 0 && topIds.length === 1
+        ? { type: 'winner', winnerId: topIds[0], counts }
+        : { type: 'tie', counts };
+  }
+
+  await update(ref(db, `rooms/${code}`), updates);
+}
+
+// Relance une nouvelle manche avec les mêmes joueurs.
+export async function replayTeamGame(code, room, characterDb) {
+  await startTeamGame(code, room, characterDb);
+}
+
+// Retour au salon (Chapitre 03).
+export async function backToTeamLobby(code) {
+  await update(ref(db, `rooms/${code}`), { phase: 'lobby', team: null });
 }

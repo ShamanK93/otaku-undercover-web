@@ -56,6 +56,29 @@ export default function HomeScreen({ onCreate, onJoin }) {
       <div className="page-divider">
         <span>ページ 02</span>
       </div>
+
+      <section className="chapter-box manga-dots" style={{ marginTop: 28 }}>
+        <span className="chapter-label">Chapitre 03</span>
+        <h1 className="hub-hero-title">CONSTRUIS TA TEAM</h1>
+        <p className="hub-hero-sub">
+          20€ de budget, des enchères à tour de rôle. Recrute 5 personnages
+          plus forts que ceux de ton adversaire. Se joue à 2.
+        </p>
+        <span className="chapter-fx">¥!</span>
+      </section>
+
+      <div className="hub-actions">
+        <button type="button" className="btn btn-primary hub-action-btn" onClick={() => onCreate('team')}>
+          + Créer un salon
+        </button>
+        <button type="button" className="btn btn-outline hub-action-btn" onClick={() => onJoin('team')}>
+          🔑 Rejoindre un salon
+        </button>
+      </div>
+
+      <div className="page-divider">
+        <span>ページ 03</span>
+      </div>
     </div>
   );
 }

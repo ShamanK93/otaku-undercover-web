@@ -14,10 +14,15 @@ import RuleLobbyScreen from './screens/RuleLobbyScreen';
 import RuleSetupScreen from './screens/RuleSetupScreen';
 import RulePlayScreen from './screens/RulePlayScreen';
 import RuleGameOverScreen from './screens/RuleGameOverScreen';
+import TeamLobbyScreen from './screens/TeamLobbyScreen';
+import TeamAnimeSelectScreen from './screens/TeamAnimeSelectScreen';
+import TeamPlayScreen from './screens/TeamPlayScreen';
+import TeamGameOverScreen from './screens/TeamGameOverScreen';
 import AdSlot from './components/AdSlot';
 import { Analytics } from '@vercel/analytics/react';
 
 import { ANIME_LIST } from './data/animeDatabase';
+import { CHARACTER_DATABASE } from './data/characterDatabase';
 import { firebaseReady } from './firebase';
 import {
   getOrCreatePlayerId,
@@ -55,6 +60,17 @@ import {
   endRuleGame,
   replayRuleGame,
   backToRuleLobby,
+  startTeamGame,
+  setTeamSettings,
+  drawCharacter,
+  setStartingBid,
+  raiseBid,
+  passAuction,
+  stealDecision,
+  endTeamGame,
+  castTeamVote,
+  replayTeamGame,
+  backToTeamLobby,
 } from './utils/room';
 
 function PageDivider({ label }) {
@@ -77,6 +93,8 @@ export default function App() {
   const [draftAnimeIds, setDraftAnimeIds] = useState([]);
   const [draftTypes, setDraftTypes] = useState([]);
   const [draftDifficulties, setDraftDifficulties] = useState([]);
+  const [showTeamAnimeSelect, setShowTeamAnimeSelect] = useState(false);
+  const [draftTeamAnimeIds, setDraftTeamAnimeIds] = useState([]);
 
   const playerId = getOrCreatePlayerId();
   const unsubRef = useRef(null);
@@ -138,6 +156,7 @@ export default function App() {
     setCode(null);
     setRoom(null);
     setShowAnimeSelect(false);
+    setShowTeamAnimeSelect(false);
     setView('home');
   }
 
@@ -160,6 +179,16 @@ export default function App() {
       setSelectedDifficulties(code, draftDifficulties),
     ]);
     setShowAnimeSelect(false);
+  }
+
+  function openTeamAnimeSelect() {
+    setDraftTeamAnimeIds(Object.keys(room.selectedAnimeIds || {}));
+    setShowTeamAnimeSelect(true);
+  }
+
+  async function confirmTeamAnimeSelect() {
+    await setSelectedAnime(code, draftTeamAnimeIds);
+    setShowTeamAnimeSelect(false);
   }
 
   if (!firebaseReady) {
@@ -300,6 +329,55 @@ export default function App() {
                     isHost={isHost}
                     onReplay={() => replayRuleGame(code, room)}
                     onBackToLobby={() => backToRuleLobby(code)}
+                  />
+                )}
+              </>
+            ) : room.gameType === 'team' ? (
+              <>
+                {room.phase === 'lobby' && showTeamAnimeSelect && (
+                  <TeamAnimeSelectScreen
+                    selectedIds={draftTeamAnimeIds}
+                    setSelectedIds={setDraftTeamAnimeIds}
+                    onBack={() => setShowTeamAnimeSelect(false)}
+                    onNext={confirmTeamAnimeSelect}
+                  />
+                )}
+
+                {room.phase === 'lobby' && !showTeamAnimeSelect && (
+                  <TeamLobbyScreen
+                    code={code}
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onOpenAnimeSelect={openTeamAnimeSelect}
+                    onChangeSettings={(next) => setTeamSettings(code, next)}
+                    onStart={() => startTeamGame(code, room, CHARACTER_DATABASE)}
+                    onLeave={handleLeave}
+                  />
+                )}
+
+                {room.phase === 'teamPlay' && room.team && (
+                  <TeamPlayScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onDraw={() => drawCharacter(code, room, playerId)}
+                    onSetStartingBid={(amount) => setStartingBid(code, room, playerId, amount)}
+                    onRaiseBid={(amount) => raiseBid(code, room, playerId, amount)}
+                    onPass={() => passAuction(code, room, playerId)}
+                    onStealDecision={(want) => stealDecision(code, room, playerId, want)}
+                    onEndGame={() => endTeamGame(code, room)}
+                  />
+                )}
+
+                {room.phase === 'teamGameOver' && room.team && (
+                  <TeamGameOverScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onVote={(choice) => castTeamVote(code, room, playerId, choice)}
+                    onReplay={() => replayTeamGame(code, room, CHARACTER_DATABASE)}
+                    onBackToLobby={() => backToTeamLobby(code)}
                   />
                 )}
               </>
