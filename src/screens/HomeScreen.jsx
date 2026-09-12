@@ -60,13 +60,11 @@ function IconPlus() {
     </svg>
   );
 }
-function IconKey() {
+function IconLock() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="8" cy="15" r="4" />
-      <path d="M10.5 12.5L20 3" />
-      <path d="M16 7l3 3" />
-      <path d="M13 4l3 3" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11" />
     </svg>
   );
 }
@@ -96,7 +94,7 @@ function ChapterRow({ chapter, onCreate, onJoin }) {
           <IconPlus /> Créer un salon
         </button>
         <button type="button" className="btn btn-outline chapter-row-btn" onClick={() => onJoin(chapter.id)}>
-          <IconKey /> Rejoindre un salon
+          <IconLock /> Rejoindre un salon
         </button>
       </div>
     </div>

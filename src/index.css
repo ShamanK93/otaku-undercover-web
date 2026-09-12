@@ -927,7 +927,7 @@ img { max-width: 100%; display: block; }
 .chapter-list { display: flex; flex-direction: column; gap: 14px; max-width: 1180px; }
 
 .chapter-row {
-  display: flex; align-items: center; gap: 20px;
+  display: flex; align-items: center; gap: 28px;
   background: #171E29; border: none;
   border-radius: 12px; padding: 18px 20px;
   cursor: default; transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
@@ -946,7 +946,7 @@ img { max-width: 100%; display: block; }
 .chapter-row-thumb {
   width: 100px; height: 100px; flex-shrink: 0; border-radius: 10px;
   background:
-    linear-gradient(135deg, transparent calc(50% - 1px), #2C3442 calc(50% - 1px), #2C3442 calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(45deg, transparent calc(50% - 1px), #2C3442 calc(50% - 1px), #2C3442 calc(50% + 1px), transparent calc(50% + 1px)),
     #10151E;
   border: 1.5px solid #2C3442; overflow: hidden;
 }
