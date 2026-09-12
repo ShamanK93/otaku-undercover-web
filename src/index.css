@@ -944,14 +944,17 @@ img { max-width: 100%; display: block; }
 .chapter-row--purple:hover { box-shadow: 0 0 0 1.5px var(--color-secondary) inset, 0 10px 24px rgba(0,0,0,0.35); }
 
 .chapter-row-thumb {
-  width: 100px; height: 100px; flex-shrink: 0; border-radius: 10px;
-  background:
-    linear-gradient(45deg, transparent calc(50% - 1px), #2C3442 calc(50% - 1px), #2C3442 calc(50% + 1px), transparent calc(50% + 1px)),
-    #10151E;
-  border: 1.5px solid #2C3442; overflow: hidden;
+  width: 100px; height: 100px; flex-shrink: 0; position: relative;
+  background: none; border: none;
 }
-.chapter-row--pink .chapter-row-thumb { border-color: var(--color-primary); }
-.chapter-row--purple .chapter-row-thumb { border-color: var(--color-secondary); }
+.chapter-row-thumb::before {
+  content: '';
+  position: absolute; top: 50%; left: 50%; width: 150px; height: 4px;
+  background: #3A4354;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+.chapter-row--pink .chapter-row-thumb::before { background: var(--color-primary); }
+.chapter-row--purple .chapter-row-thumb::before { background: var(--color-secondary); }
 
 .chapter-row-body { flex: 1; min-width: 0; }
 .chapter-row-number {
