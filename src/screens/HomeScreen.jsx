@@ -76,7 +76,7 @@ export default function HomeScreen({ onCreate, onJoin }) {
         <div className="hub-banner-wrap">
           <section className="hub-banner manga-dots">
             <div className="hub-banner-text">
-              <p className="hub-banner-eyebrow">UN JEU. DES ANIMES. UNE SEULE VÉRITÉ.</p>
+              <p className="hub-banner-eyebrow">UN JEU. DES ANIMES. UNE SEULE <em>VÉRITÉ</em>.</p>
               <h1 className="hub-banner-title">CHAPITRES</h1>
               <p className="hub-banner-sub">
                 Choisis un mode de jeu, crée un salon et invite tes amis à

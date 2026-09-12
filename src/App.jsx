@@ -239,11 +239,13 @@ export default function App() {
   }, [room, isHost, code]);
 
   return (
-    <div className="page-shell">
+    <div className={isHome ? 'page-shell page-shell--home' : 'page-shell'}>
       <div className="page-row">
-        <div className="ad-rail">
-          <AdSlot variant="rail" />
-        </div>
+        {!isHome && (
+          <div className="ad-rail">
+            <AdSlot variant="rail" />
+          </div>
+        )}
 
         <div className={isHome ? 'main-col main-col--hub' : 'main-col'}>
         {!code && view === 'home' && (
@@ -459,14 +461,16 @@ export default function App() {
           </div>
         )}
 
-        <div className="mobile-ad-banner">
+        <div className="mobile-ad-banner" style={isHome ? { display: 'none' } : undefined}>
           <AdSlot variant="banner" />
         </div>
       </div>
 
-      <div className="ad-rail">
-        <AdSlot variant="rail" />
-      </div>
+      {!isHome && (
+        <div className="ad-rail">
+          <AdSlot variant="rail" />
+        </div>
+      )}
       </div>
 
       <footer className="site-footer">
