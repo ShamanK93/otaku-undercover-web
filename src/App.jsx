@@ -470,7 +470,13 @@ export default function App() {
       </div>
 
       <footer className="site-footer">
-        Otaku Undercover — crée un salon et joue en ligne avec tes amis.
+        <p>Otaku Undercover — crée un salon et joue en ligne avec tes amis.</p>
+        <nav className="footer-links">
+          <a href="/regles.html">Règles du jeu</a>
+          <a href="/a-propos.html">À propos</a>
+          <a href="/confidentialite.html">Confidentialité</a>
+          <a href="/mentions-legales.html">Mentions légales</a>
+        </nav>
       </footer>
       <Analytics />
     </div>
