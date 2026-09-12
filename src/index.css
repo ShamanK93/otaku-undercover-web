@@ -930,7 +930,7 @@ img { max-width: 100%; display: block; }
   position: relative; overflow: hidden;
   display: flex; align-items: center; gap: 20px;
   background: #171E29; border: none;
-  border-radius: 12px; padding: 18px 20px 18px 150px;
+  border-radius: 12px; padding: 18px 20px 18px 250px;
   cursor: default; transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
 }
 .chapter-row:hover {
@@ -945,7 +945,7 @@ img { max-width: 100%; display: block; }
 .chapter-row--purple:hover { box-shadow: 0 0 0 1.5px var(--color-secondary) inset, 0 10px 24px rgba(0,0,0,0.35); }
 
 .chapter-row-thumb {
-  position: absolute; top: 0; left: 0; bottom: 0; width: 130px;
+  position: absolute; top: 0; left: 100px; bottom: 0; width: 130px;
   background: linear-gradient(to bottom right, transparent calc(50% - 1.5px), #3A4354 calc(50% - 1.5px), #3A4354 calc(50% + 1.5px), transparent calc(50% + 1.5px));
 }
 .chapter-row--pink .chapter-row-thumb { background: linear-gradient(to bottom right, transparent calc(50% - 1.5px), var(--color-primary) calc(50% - 1.5px), var(--color-primary) calc(50% + 1.5px), transparent calc(50% + 1.5px)); }
