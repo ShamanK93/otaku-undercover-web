@@ -5,7 +5,6 @@ const CHAPTERS = [
     id: 'undercover',
     number: '01',
     accent: 'pink',
-    icon: '🕵️',
     title: "DEVINE QUI EST L'INTRUS",
     desc: 'Gère un salon, invite tes potes avec un code, chacun sur son écran.',
     minPlayers: 3,
@@ -14,7 +13,6 @@ const CHAPTERS = [
     id: 'rule',
     number: '02',
     accent: 'grey',
-    icon: '❓',
     title: 'DEVINE LA RÈGLE',
     desc: 'Chacun choisit une règle secrète. Propose des personnages ou tente de percer la règle des autres.',
     minPlayers: 2,
@@ -23,12 +21,55 @@ const CHAPTERS = [
     id: 'team',
     number: '03',
     accent: 'purple',
-    icon: '⚔️',
     title: 'CONSTRUIS TA TEAM',
     desc: '20¥ de budget, des enchères à tour de rôle. Recrute 5 personnages, à 2 joueurs ou plus.',
     minPlayers: 2,
   },
 ];
+
+function IconHome() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 11l9-8 9 8" />
+      <path d="M5 10v10h14V10" />
+    </svg>
+  );
+}
+function IconBook() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  );
+}
+function IconInfo() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="11" x2="12" y2="16" />
+      <circle cx="12" cy="7.5" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+function IconKey() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="15" r="4" />
+      <path d="M10.5 12.5L20 3" />
+      <path d="M16 7l3 3" />
+      <path d="M13 4l3 3" />
+    </svg>
+  );
+}
+function IconUser() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21v-1a7 7 0 0 1 16 0v1" />
+    </svg>
+  );
+}
 
 function ChapterRow({ chapter, onCreate, onJoin }) {
   return (
@@ -38,14 +79,16 @@ function ChapterRow({ chapter, onCreate, onJoin }) {
         <span className="chapter-row-number">Chapitre {chapter.number}</span>
         <h2 className="chapter-row-title">{chapter.title}</h2>
         <p className="chapter-row-desc">{chapter.desc}</p>
-        <span className="chapter-row-meta">👤 min. {chapter.minPlayers} joueur{chapter.minPlayers > 1 ? 's' : ''}</span>
+        <span className="chapter-row-meta">
+          <IconUser /> min. {chapter.minPlayers} joueur{chapter.minPlayers > 1 ? 's' : ''}
+        </span>
       </div>
       <div className="chapter-row-actions">
         <button type="button" className="btn btn-primary chapter-row-btn" onClick={() => onCreate(chapter.id)}>
           + Créer un salon
         </button>
         <button type="button" className="btn btn-outline chapter-row-btn" onClick={() => onJoin(chapter.id)}>
-          🔑 Rejoindre un salon
+          <IconKey /> Rejoindre un salon
         </button>
       </div>
     </div>
@@ -56,13 +99,11 @@ export default function HomeScreen({ onCreate, onJoin }) {
   return (
     <div className="hub-layout">
       <aside className="hub-sidebar">
-        <div className="hub-sidebar-brand">
-          OTAKUDLE
-        </div>
+        <div className="hub-sidebar-brand">OTAKUDLE</div>
         <nav className="hub-sidebar-nav">
-          <span className="sidebar-link sidebar-link--active">🏠 Accueil</span>
-          <a className="sidebar-link" href="/regles.html">📖 Règles</a>
-          <a className="sidebar-link" href="/a-propos.html">ℹ️ À propos</a>
+          <span className="sidebar-link sidebar-link--active"><IconHome /> Accueil</span>
+          <a className="sidebar-link" href="/regles.html"><IconBook /> Règles</a>
+          <a className="sidebar-link" href="/a-propos.html"><IconInfo /> À propos</a>
         </nav>
       </aside>
 
@@ -83,16 +124,6 @@ export default function HomeScreen({ onCreate, onJoin }) {
                 jouer avec toi, chacun sur son propre écran.
               </p>
             </div>
-            <svg className="hub-banner-figure" viewBox="0 0 200 240" aria-hidden="true">
-              <ellipse cx="100" cy="228" rx="70" ry="10" fill="#000" opacity="0.25" />
-              <path d="M40 240 L40 150 C40 90 65 55 100 55 C135 55 160 90 160 150 L160 240 Z" fill="#22202A" />
-              <path d="M55 240 L55 160 C55 110 75 80 100 80 C125 80 145 110 145 160 L145 240 Z" fill="#E85D82" />
-              <circle cx="100" cy="60" r="42" fill="#F5E4D7" />
-              <path d="M58 55 C58 15 142 15 142 55 C142 40 120 30 100 30 C80 30 58 40 58 55 Z" fill="#22202A" />
-              <rect x="60" y="55" width="80" height="18" rx="4" fill="#22202A" />
-              <circle cx="82" cy="63" r="4" fill="#F5E4D7" />
-              <circle cx="118" cy="63" r="4" fill="#F5E4D7" />
-            </svg>
           </section>
           <div className="hub-side-strip" aria-hidden="true">
             <span>正体を暴け・秘密を守れ</span>
