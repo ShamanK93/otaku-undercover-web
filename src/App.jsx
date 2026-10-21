@@ -18,7 +18,15 @@ import TeamLobbyScreen from './screens/TeamLobbyScreen';
 import TeamAnimeSelectScreen from './screens/TeamAnimeSelectScreen';
 import TeamPlayScreen from './screens/TeamPlayScreen';
 import TeamGameOverScreen from './screens/TeamGameOverScreen';
+import DrawLobbyScreen from './screens/DrawLobbyScreen';
+import DrawRevealScreen from './screens/DrawRevealScreen';
+import DrawPlayScreen from './screens/DrawPlayScreen';
+import DrawVoteScreen from './screens/DrawVoteScreen';
+import DrawResultScreen from './screens/DrawResultScreen';
+import DrawGameOverScreen from './screens/DrawGameOverScreen';
 import AdSlot from './components/AdSlot';
+import OuShell from './components/OuShell';
+import { getChapter } from './data/chapters';
 import { Analytics } from '@vercel/analytics/react';
 
 import { ANIME_LIST } from './data/animeDatabase';
@@ -71,15 +79,21 @@ import {
   castTeamVote,
   replayTeamGame,
   backToTeamLobby,
+  startDrawGame,
+  startDrawing,
+  addSlateStroke,
+  undoSlateStroke,
+  addFresqueStroke,
+  skipFresqueTurn,
+  peekDrawSlate,
+  endDrawing,
+  finalizeDrawVote,
+  continueDrawGame,
+  drawMrWhiteGuess,
+  setDrawSettings,
+  replayDrawGame,
+  backToDrawLobby,
 } from './utils/room';
-
-function PageDivider({ label }) {
-  return (
-    <div className="page-divider">
-      <span>{label}</span>
-    </div>
-  );
-}
 
 export default function App() {
   const [view, setView] = useState('home'); // home | create | join
@@ -102,7 +116,11 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const salon = params.get('salon');
-    if (salon) setView('join');
+    if (salon) {
+      // Lien d'invitation : le mode de jeu est celui du salon, pas un chapitre choisi ici.
+      setPendingGameType(null);
+      setView('join');
+    }
   }, []);
 
   const connectToRoom = useCallback((roomCode) => {
@@ -193,26 +211,29 @@ export default function App() {
 
   if (!firebaseReady) {
     return (
-      <div className="page-shell">
-        <div className="main-col main-col--hub">
-          <div className="hub">
-            <div className="card" style={{ maxWidth: 560, margin: '60px auto' }}>
-              <h2 className="panel-title" style={{ marginBottom: 12 }}>Configuration requise</h2>
-              <p style={{ color: 'var(--color-muted)', lineHeight: 1.6 }}>
-                Le mode en ligne a besoin d'un projet Firebase gratuit pour synchroniser les
-                salons en temps réel. Copie <code>.env.example</code> en <code>.env</code>,
-                renseigne tes clés de projet Firebase, puis relance le site. Voir le README,
-                section « Mode en ligne ».
-              </p>
-            </div>
+      <OuShell active="home">
+        <div className="game-panel ou-game">
+          <div className="screen">
+            <h2 className="screen-title">Configuration requise</h2>
+            <p style={{ color: 'var(--color-muted)', lineHeight: 1.6 }}>
+              Le mode en ligne a besoin d'un projet Firebase gratuit pour synchroniser les
+              salons en temps réel. Copie <code>.env.example</code> en <code>.env</code>,
+              renseigne tes clés de projet Firebase, puis relance le site. Voir le README,
+              section « Mode en ligne ».
+            </p>
           </div>
         </div>
-      </div>
+      </OuShell>
     );
   }
 
   const isHost = room && room.hostId === playerId;
-  const isHome = !code && view === 'home';
+  const roomChapter = room ? getChapter(room.gameType || 'undercover') : null;
+
+  // Dans un salon, « Accueil » dans la sidebar fait quitter la partie : on demande confirmation.
+  function confirmLeave() {
+    if (window.confirm("Quitter le salon et revenir à l'accueil ?")) handleLeave();
+  }
 
   // Une fois tous les joueurs prêts sur l'écran de révélation, l'hôte fait
   // automatiquement passer le salon à l'étape des indices.
@@ -238,16 +259,34 @@ export default function App() {
     }
   }, [room, isHost, code]);
 
-  return (
-    <div className={isHome ? 'page-shell page-shell--home' : 'page-shell'}>
-      <div className="page-row">
-        {!isHome && (
-          <div className="ad-rail">
-            <AdSlot variant="rail" />
-          </div>
-        )}
+  // Chapitre 04 : quand tous les joueurs encore en jeu ont vu leur mot,
+  // l'hôte lance la phase de dessin.
+  useEffect(() => {
+    if (!room || !isHost || room.phase !== 'drawReveal' || !room.game) return;
+    const alive = room.game.alive || {};
+    const ready = room.game.ready || {};
+    const aliveIds = Object.keys(alive).filter((id) => alive[id]);
+    if (aliveIds.length > 0 && aliveIds.every((id) => ready[id])) {
+      startDrawing(code, room);
+    }
+  }, [room, isHost, code]);
 
-        <div className={isHome ? 'main-col main-col--hub' : 'main-col'}>
+  // Chapitre 04 : fin du chrono. Duel → on passe au vote ; Fresque → le
+  // joueur qui n'a pas tracé passe son tour.
+  useEffect(() => {
+    if (!room || !isHost || room.phase !== 'drawing' || !room.game || !room.game.deadline) return;
+    const delay = Math.max(0, room.game.deadline - Date.now()) + 300;
+    const timer = setTimeout(() => {
+      if (room.settings.mode === 'fresque') skipFresqueTurn(code, room);
+      else endDrawing(code);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [room, isHost, code]);
+
+  return (
+    <div className="page-shell page-shell--home">
+      <div className="page-row">
+        <div className="main-col main-col--hub">
         {!code && view === 'home' && (
           <HomeScreen
             onCreate={(gameType) => { setPendingGameType(gameType); setView('create'); }}
@@ -256,21 +295,22 @@ export default function App() {
         )}
 
         {!code && view === 'create' && (
-          <div className="game-panel">
+          <OuShell active="home" onHome={() => setView('home')}>
             <CreateRoomScreen
+              chapter={getChapter(pendingGameType)}
               defaultName={getSavedName()}
               onBack={() => setView('home')}
               onCreate={handleCreate}
               creating={busy}
               error={error}
             />
-            <PageDivider label="OTAKU UNDERCOVER" />
-          </div>
+          </OuShell>
         )}
 
         {!code && view === 'join' && (
-          <div className="game-panel">
+          <OuShell active="home" onHome={() => setView('home')}>
             <JoinRoomScreen
+              chapter={getChapter(pendingGameType)}
               defaultName={getSavedName()}
               defaultCode={new URLSearchParams(window.location.search).get('salon') || ''}
               onBack={() => setView('home')}
@@ -278,21 +318,20 @@ export default function App() {
               joining={busy}
               error={error}
             />
-            <PageDivider label="OTAKU UNDERCOVER" />
-          </div>
+          </OuShell>
         )}
 
-        {code && !room && (
-          <div className="game-panel">
-            <div className="screen screen-centered">
-              <p style={{ textAlign: 'center', color: 'var(--color-muted)' }}>Connexion au salon...</p>
-            </div>
-          </div>
-        )}
-
-        {code && room && (
-          <div className="game-panel">
-            {room.gameType === 'rule' ? (
+        {code && (
+          <OuShell active="home" onHome={confirmLeave}>
+            <div className="ou-game-row">
+              <div className={`game-panel ou-game ou-accent--${roomChapter ? roomChapter.accent : 'grey'}`}>
+                <span className="ou-chapter-tag">{roomChapter ? `Chapitre ${roomChapter.number}` : 'Salon'}</span>
+            {!room && (
+              <div className="screen screen-centered">
+                <p style={{ textAlign: 'center', color: 'var(--color-muted)' }}>Connexion au salon...</p>
+              </div>
+            )}
+            {room && (room.gameType === 'rule' ? (
               <>
                 {room.phase === 'lobby' && (
                   <RuleLobbyScreen
@@ -331,6 +370,81 @@ export default function App() {
                     isHost={isHost}
                     onReplay={() => replayRuleGame(code, room)}
                     onBackToLobby={() => backToRuleLobby(code)}
+                  />
+                )}
+              </>
+            ) : room.gameType === 'drawing' ? (
+              <>
+                {room.phase === 'lobby' && showAnimeSelect && (
+                  <AnimeSelectionScreen
+                    selectedIds={draftAnimeIds}
+                    setSelectedIds={setDraftAnimeIds}
+                    selectedTypes={draftTypes}
+                    setSelectedTypes={setDraftTypes}
+                    selectedDifficulties={draftDifficulties}
+                    setSelectedDifficulties={setDraftDifficulties}
+                    onBack={() => setShowAnimeSelect(false)}
+                    onNext={confirmAnimeSelect}
+                  />
+                )}
+
+                {room.phase === 'lobby' && !showAnimeSelect && (
+                  <DrawLobbyScreen
+                    code={code}
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onOpenAnimeSelect={openAnimeSelect}
+                    onChangeSettings={(next) => setDrawSettings(code, next)}
+                    onStart={() => startDrawGame(code, room, ANIME_LIST)}
+                    onLeave={handleLeave}
+                  />
+                )}
+
+                {room.phase === 'drawReveal' && room.game && (
+                  <DrawRevealScreen room={room} playerId={playerId} onReady={() => markReady(code, playerId)} />
+                )}
+
+                {room.phase === 'drawing' && room.game && (
+                  <DrawPlayScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onSlateStroke={(stroke) => addSlateStroke(code, playerId, stroke)}
+                    onUndo={() => undoSlateStroke(code, room, playerId)}
+                    onFresqueStroke={(stroke) => addFresqueStroke(code, room, playerId, stroke)}
+                    onSkipTurn={() => skipFresqueTurn(code, room)}
+                    onPeek={(targetId) => peekDrawSlate(code, room, playerId, targetId)}
+                    onEndDrawing={() => endDrawing(code)}
+                  />
+                )}
+
+                {room.phase === 'drawVote' && room.game && (
+                  <DrawVoteScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onCastVote={(targetId) => castVote(code, playerId, targetId)}
+                    onFinalize={() => finalizeDrawVote(code, room)}
+                  />
+                )}
+
+                {room.phase === 'drawResult' && room.game && (
+                  <DrawResultScreen
+                    room={room}
+                    playerId={playerId}
+                    isHost={isHost}
+                    onMrWhiteGuess={(correct) => drawMrWhiteGuess(code, room, correct, ANIME_LIST)}
+                    onContinue={() => continueDrawGame(code, room, ANIME_LIST)}
+                  />
+                )}
+
+                {room.phase === 'drawOver' && room.game && (
+                  <DrawGameOverScreen
+                    room={room}
+                    isHost={isHost}
+                    onReplay={() => replayDrawGame(code, room, ANIME_LIST)}
+                    onBackToLobby={() => backToDrawLobby(code)}
                   />
                 )}
               </>
@@ -456,21 +570,18 @@ export default function App() {
                   />
                 )}
               </>
-            )}
-            <PageDivider label="OTAKU UNDERCOVER" />
-          </div>
+            ))}
+              </div>
+              <div className="ad-rail">
+                <AdSlot variant="rail" />
+              </div>
+            </div>
+            <div className="mobile-ad-banner">
+              <AdSlot variant="banner" />
+            </div>
+          </OuShell>
         )}
-
-        <div className="mobile-ad-banner" style={isHome ? { display: 'none' } : undefined}>
-          <AdSlot variant="banner" />
-        </div>
       </div>
-
-      {!isHome && (
-        <div className="ad-rail">
-          <AdSlot variant="rail" />
-        </div>
-      )}
       </div>
 
       <footer className="site-footer">
@@ -480,6 +591,7 @@ export default function App() {
           <a href="/a-propos.html">À propos</a>
           <a href="/confidentialite.html">Confidentialité</a>
           <a href="/mentions-legales.html">Mentions légales</a>
+          <a className="footer-support" href="https://ko-fi.com/otakuundercover" target="_blank" rel="noopener">☕ Supporte-nous</a>
         </nav>
       </footer>
       <Analytics />

@@ -1,6 +1,7 @@
-import { ref, set, update, get, onValue, off, serverTimestamp } from 'firebase/database';
+import { ref, set, update, get, push, onValue, off, serverTimestamp } from 'firebase/database';
 import { db } from '../firebase';
 import { assignRoles, shuffle, checkWinCondition } from './gameLogic';
+import { buildDrawGame, tallyVotes, voteOutcome, afterVote, fresqueTurn } from './drawGame';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans caractères ambigus (0/O, 1/I...)
 const PLAYER_ID_KEY = 'otaku_undercover_player_id';
@@ -64,6 +65,14 @@ export async function createRoom(hostName, gameType = 'undercover') {
 
   if (gameType === 'rule') {
     await set(ref(db, `rooms/${code}`), { ...base, settings: { actionSeconds: 30 } });
+  } else if (gameType === 'drawing') {
+    await set(ref(db, `rooms/${code}`), {
+      ...base,
+      selectedAnimeIds: {},
+      selectedTypes: {},
+      selectedDifficulties: {},
+      settings: { mode: 'duel', numUndercover: 1, numMrWhite: 0, drawSeconds: 45, turnSeconds: 20, laps: 2 },
+    });
   } else if (gameType === 'team') {
     await set(ref(db, `rooms/${code}`), {
       ...base,
@@ -626,9 +635,11 @@ function teamNewLogId() {
   return 'l_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+// Firebase n'enregistre pas les tableaux / objets vides : team.teams, team.log,
+// team.logOrder (et team.pool une fois vidé) peuvent donc être absents.
 function isBankrupt(room, playerId) {
   const budget = room.team.budgets[playerId];
-  const teamSize = (room.team.teams[playerId] || []).length;
+  const teamSize = ((room.team.teams || {})[playerId] || []).length;
   return budget <= 0 && teamSize < TEAM_SIZE;
 }
 
@@ -636,8 +647,8 @@ function isBankrupt(room, playerId) {
 // personne ne peut acquérir de personnage) ?
 function teamGameShouldEnd(room) {
   const playerIds = Object.keys(room.players || {});
-  const allFull = playerIds.every((id) => (room.team.teams[id] || []).length >= TEAM_SIZE);
-  const poolEmpty = room.team.pool.length === 0;
+  const allFull = playerIds.every((id) => ((room.team.teams || {})[id] || []).length >= TEAM_SIZE);
+  const poolEmpty = (room.team.pool || []).length === 0;
   const allStuck = playerIds.every((id) => isBankrupt(room, id));
   return allFull || poolEmpty || allStuck;
 }
@@ -663,9 +674,9 @@ function nextChallenger(playerIds, passedBy, highestBidder, afterId) {
 // (il ne peut plus fixer de mise de départ).
 export async function drawCharacter(code, room, playerId) {
   const current = room.team.turnOrder[room.team.turnIndex];
-  if (current !== playerId || room.team.currentDraw || room.team.pool.length === 0) return;
+  if (current !== playerId || room.team.currentDraw || (room.team.pool || []).length === 0) return;
 
-  const pool = [...room.team.pool];
+  const pool = [...(room.team.pool || [])];
   const idx = Math.floor(Math.random() * pool.length);
   const character = pool[idx];
   pool.splice(idx, 1);
@@ -737,7 +748,7 @@ export async function setStartingBid(code, room, playerId, amount) {
 
 async function resolveAuctionWin(code, room, winnerId, price, character) {
   const nextBudgets = { ...room.team.budgets, [winnerId]: room.team.budgets[winnerId] - price };
-  const nextTeams = { ...room.team.teams, [winnerId]: [...(room.team.teams[winnerId] || []), character] };
+  const nextTeams = { ...room.team.teams, [winnerId]: [...((room.team.teams || {})[winnerId] || []), character] };
   const logId = teamNewLogId();
   const projected = { ...room, team: { ...room.team, budgets: nextBudgets, teams: nextTeams } };
 
@@ -804,7 +815,7 @@ export async function stealDecision(code, room, playerId, wantSteal) {
 
   if (wantSteal) {
     const nextBudgets = { ...room.team.budgets, [playerId]: Math.max(0, room.team.budgets[playerId] - 1) };
-    const nextTeams = { ...room.team.teams, [playerId]: [...(room.team.teams[playerId] || []), draw.character] };
+    const nextTeams = { ...room.team.teams, [playerId]: [...((room.team.teams || {})[playerId] || []), draw.character] };
     const logId = teamNewLogId();
     const projected = { ...room, team: { ...room.team, budgets: nextBudgets, teams: nextTeams } };
 
@@ -889,4 +900,140 @@ export async function replayTeamGame(code, room, characterDb) {
 // Retour au salon (Chapitre 03).
 export async function backToTeamLobby(code) {
   await update(ref(db, `rooms/${code}`), { phase: 'lobby', team: null });
+}
+
+// ==========================================================================
+// Chapitre 04 — « L'Imposteur au Pinceau »
+// Phases : drawReveal (distribution) → drawing → drawVote → drawResult
+//          → drawReveal (prolongations) … → drawOver
+// Un trait = { c: couleur, w: épaisseur, p: [x, y, x, y, …] } en coordonnées 0–1000.
+// ==========================================================================
+
+function drawFilters(room) {
+  return {
+    selectedAnimeIds: Object.keys(room.selectedAnimeIds || {}),
+    selectedTypes: Object.keys(room.selectedTypes || {}),
+    selectedDifficulties: Object.keys(room.selectedDifficulties || {}),
+  };
+}
+
+// Réservé à l'hôte : distribution des rôles et des mots.
+export async function startDrawGame(code, room, animeList) {
+  const { numUndercover, numMrWhite } = room.settings;
+  const game = buildDrawGame({
+    animeList,
+    ...drawFilters(room),
+    playerIds: Object.keys(room.players || {}),
+    numUndercover,
+    numMrWhite,
+  });
+  await update(ref(db, `rooms/${code}`), { phase: 'drawReveal', game });
+}
+
+// Lancé automatiquement par l'hôte quand tout le monde a vu son mot.
+export async function startDrawing(code, room) {
+  const s = room.settings || {};
+  const seconds = s.mode === 'fresque' ? s.turnSeconds || 20 : s.drawSeconds || 45;
+  await update(ref(db, `rooms/${code}`), {
+    phase: 'drawing',
+    'game/slates': null,
+    'game/fresque': null,
+    'game/peeks': null,
+    'game/turn': 0,
+    'game/deadline': Date.now() + seconds * 1000,
+  });
+}
+
+// Duel d'ardoises : chacun ajoute ses traits sur sa propre ardoise.
+export async function addSlateStroke(code, playerId, stroke) {
+  await set(push(ref(db, `rooms/${code}/game/slates/${playerId}`)), stroke);
+}
+
+export async function undoSlateStroke(code, room, playerId) {
+  const mine = (room.game.slates || {})[playerId] || {};
+  const keys = Object.keys(mine);
+  if (keys.length === 0) return;
+  await set(ref(db, `rooms/${code}/game/slates/${playerId}/${keys[keys.length - 1]}`), null);
+}
+
+// Fresque commune : UN seul trait continu, puis la main passe au suivant.
+export async function addFresqueStroke(code, room, playerId, stroke) {
+  const laps = room.settings.laps || 2;
+  const turn = fresqueTurn(room.game, laps);
+  if (turn.currentId !== playerId) return;
+  const key = push(ref(db, `rooms/${code}/game/fresque`)).key;
+  await update(ref(db, `rooms/${code}`), {
+    [`game/fresque/${key}`]: stroke,
+    ...nextFresqueTurn(room, turn),
+  });
+}
+
+// Réservé à l'hôte : joueur absent ou chrono écoulé, on passe son tour.
+export async function skipFresqueTurn(code, room) {
+  const turn = fresqueTurn(room.game, room.settings.laps || 2);
+  if (turn.done) return;
+  await update(ref(db, `rooms/${code}`), nextFresqueTurn(room, turn));
+}
+
+function nextFresqueTurn(room, turn) {
+  if (turn.isLast) {
+    return { phase: 'drawVote', 'game/turn': (room.game.turn || 0) + 1, 'game/deadline': null, 'game/votes': {} };
+  }
+  return {
+    'game/turn': (room.game.turn || 0) + 1,
+    'game/deadline': Date.now() + (room.settings.turnSeconds || 20) * 1000,
+  };
+}
+
+// Pass'Œil de Mr. White : 3 secondes sur l'ardoise d'un voisin, une fois par manche.
+export async function peekDrawSlate(code, room, playerId, targetId) {
+  if (room.game.peeks && room.game.peeks[playerId]) return;
+  await set(ref(db, `rooms/${code}/game/peeks/${playerId}`), { target: targetId, until: Date.now() + 3000 });
+}
+
+// Fin du dessin (chrono écoulé ou hôte) : on dévoile tout et on vote.
+export async function endDrawing(code) {
+  await update(ref(db, `rooms/${code}`), { phase: 'drawVote', 'game/deadline': null, 'game/votes': {} });
+}
+
+export async function finalizeDrawVote(code, room) {
+  const { eliminatedId } = tallyVotes(room.game.votes);
+  await update(ref(db, `rooms/${code}`), {
+    phase: 'drawResult',
+    'game/eliminatedId': eliminatedId,
+    'game/voteOutcome': voteOutcome(room.game, eliminatedId),
+  });
+}
+
+// Après le résultat du vote : fin de partie, ou prolongations avec un nouveau mot.
+export async function continueDrawGame(code, room, animeList) {
+  const res = afterVote(room.game, animeList, drawFilters(room));
+  if (res.finished) {
+    await update(ref(db, `rooms/${code}`), { phase: 'drawOver', 'game/alive': res.alive, 'game/winner': res.winner });
+    return;
+  }
+  await update(ref(db, `rooms/${code}`), {
+    phase: 'drawReveal',
+    game: { ...room.game, ...res.next, slates: null, fresque: null, peeks: null, turn: 0, deadline: null },
+  });
+}
+
+export async function drawMrWhiteGuess(code, room, correct, animeList) {
+  if (correct) {
+    await update(ref(db, `rooms/${code}`), { phase: 'drawOver', 'game/winner': 'mrwhite' });
+    return;
+  }
+  await continueDrawGame(code, room, animeList);
+}
+
+export async function setDrawSettings(code, settings) {
+  await update(ref(db, `rooms/${code}/settings`), settings);
+}
+
+export async function replayDrawGame(code, room, animeList) {
+  await startDrawGame(code, room, animeList);
+}
+
+export async function backToDrawLobby(code) {
+  await update(ref(db, `rooms/${code}`), { phase: 'lobby', game: null });
 }

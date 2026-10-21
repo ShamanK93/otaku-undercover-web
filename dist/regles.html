@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Règles du jeu — Otaku Undercover</title>
+<meta name="description" content="Règles complètes des quatre modes de jeu d'Otaku Undercover : Devine qui est l'intrus, Devine la règle, Construis ta team et L'Imposteur au Pinceau." />
+<meta name="theme-color" content="#0A0B10" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="stylesheet" href="/ou-theme.css" />
+</head>
+<body class="ou-body">
+<div class="ou-home">
+  <aside class="ou-sidebar">
+    <a class="ou-logo" href="/">
+      <div class="ou-logo-text">
+        <span class="ou-logo-otaku">OTAKU</span>
+        <span class="ou-logo-under">UNDERCOVER</span>
+      </div>
+      <span class="ou-logo-kanji" aria-hidden="true">オタク裏切り者</span>
+    </a>
+    <nav class="ou-nav">
+      <a class="ou-nav-link" href="/"><span class="ou-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2 11.5h3V21h5.5v-6h3v6H19v-9.5h3z"/></svg></span><span>Accueil</span></a>
+      <a class="ou-nav-link ou-nav-link--active" href="/regles.html" aria-current="page"><span class="ou-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span>Règles</span></a>
+      <span class="ou-nav-link ou-nav-link--soon" aria-disabled="true"><span class="ou-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></span><span>Missions</span><span class="ou-nav-soon">Bientôt</span></span>
+      <span class="ou-nav-link ou-nav-link--soon" aria-disabled="true"><span class="ou-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/></svg></span><span>Profil</span><span class="ou-nav-soon">Bientôt</span></span>
+      <span class="ou-nav-link ou-nav-link--soon" aria-disabled="true"><span class="ou-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg></span><span>Classement</span><span class="ou-nav-soon">Bientôt</span></span>
+      <a class="ou-nav-link" href="/a-propos.html"><span class="ou-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.6" fill="currentColor" stroke="none"/></svg></span><span>À propos</span></a>
+    </nav>
+    <div class="ou-sidebar-art" aria-hidden="true"><span class="ou-sidebar-art-kanji">君は誰だ？</span></div>
+  </aside>
+
+  <main class="ou-main">
+    <div class="ou-hero-bg" aria-hidden="true"></div>
+    <span class="ou-side-kanji" aria-hidden="true">仲間を信じろ</span>
+
+    <header class="ou-topbar">
+      <div class="ou-user">
+        <span class="ou-user-avatar" id="ou-user-avatar">I</span>
+        <span class="ou-user-name" id="ou-user-name">Invité</span>
+      </div>
+      <span class="ou-topbar-torii" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M1 3.5c3.5 1 7 1.3 11 1.3s7.5-.3 11-1.3V6c-1 .3-2 .5-3 .6V8h2v2h-2v11h-2.2V10H6.2v11H4V10H2V8h2V6.6c-1-.1-2-.3-3-.6zM6.2 8h11.6V6.8c-1.9.2-3.8.2-5.8.2s-3.9 0-5.8-.2z"/></svg></span>
+    </header>
+
+    <a class="ou-back" href="/">← Retour aux chapitres</a>
+
+    <section class="ou-hero ou-hero--compact">
+      <p class="ou-hero-eyebrow">Quatre chapitres.<br />Une seule <em>vérité.</em></p>
+      <h1 class="ou-hero-title">RÈGLES</h1>
+      <p class="ou-hero-sub">Tout ce qu'il faut savoir pour jouer aux quatre modes d'Otaku Undercover.</p>
+    </section>
+
+    <article class="ou-prose">
+<p>Otaku Undercover est un site de party games en ligne autour de l'anime, à jouer entre amis à distance : chacun rejoint un salon depuis son propre téléphone ou ordinateur grâce à un code ou un lien d'invitation. Voici le détail des quatre modes de jeu disponibles.</p>
+
+  <h2>Chapitre 01 — Devine qui est l'intrus</h2>
+  <p>Un mode inspiré du jeu de société Undercover / Loup-Garou, revisité avec des personnages d'anime. Chaque manche, la majorité des joueurs (les « civils ») reçoit un même personnage secret, tandis qu'un ou plusieurs « undercovers » reçoivent un personnage très proche mais différent. Un joueur peut aussi devenir « Mr. White », qui ne reçoit aucun mot du tout.</p>
+  <h3>Déroulement</h3>
+  <p>Chaque joueur découvre son rôle en privé sur son propre écran. À tour de rôle, chacun donne un indice à voix haute sur son personnage, sans jamais le nommer directement. Une fois le tour d'indices terminé, tout le monde discute et vote pour éliminer le joueur jugé le plus suspect. Le joueur éliminé révèle alors son rôle à la table.</p>
+  <h3>Cas particulier de Mr. White</h3>
+  <p>Si Mr. White est éliminé, il a une dernière chance de retourner la partie : il peut tenter de deviner le mot des civils. S'il trouve la bonne réponse, il remporte la partie à lui seul, quel que soit le nombre de joueurs restants.</p>
+  <h3>Fin de partie</h3>
+  <p>Les civils gagnent si tous les undercovers (et Mr. White) ont été éliminés. Les intrus gagnent si leur nombre devient égal ou supérieur au nombre de civils encore en jeu.</p>
+  <h3>Personnalisation</h3>
+  <p>L'hôte du salon choisit librement les univers d'anime autorisés (Naruto, One Piece, Attack on Titan, Demon Slayer, et bien d'autres), ainsi que le type de duo tiré au sort — personnages, lieux, objets, techniques, événements ou groupes — et leur niveau de difficulté, pour adapter la partie au niveau de connaissance des joueurs.</p>
+
+  <h2>Chapitre 02 — Devine la règle</h2>
+  <p>Un jeu de déduction pure. Au début de la partie, chaque joueur choisit en secret une règle personnelle : un point commun entre plusieurs personnages d'anime, par exemple « les personnages capables de se transformer en Super Saiyan » ou « les personnages qui portent une cicatrice ».</p>
+  <h3>Déroulement d'un tour</h3>
+  <p>À son tour, un joueur choisit entre deux actions. Il peut proposer un personnage : il cite un nom, et chacun des autres joueurs répond individuellement, selon sa propre règle secrète, si ce personnage correspond ou non. Il peut aussi tenter de deviner la règle d'un adversaire précis : il formule son hypothèse, et le joueur visé répond honnêtement si c'est exact.</p>
+  <h3>Fin de partie</h3>
+  <p>À deux joueurs, si l'un devine la règle de l'autre, le joueur démasqué a une dernière chance immédiate de deviner en retour la règle de son adversaire : s'il réussit, la partie se termine sur une égalité ; sinon, son adversaire l'emporte. À trois joueurs ou plus, chaque joueur démasqué sort du jeu ; la partie continue jusqu'à ce qu'il ne reste qu'un seul joueur avec sa règle intacte, qui remporte alors la partie.</p>
+
+  <h2>Chapitre 03 — Construis ta team</h2>
+  <p>Un jeu d'enchères et de gestion de budget. Chaque joueur dispose d'un capital de départ de 20 yens fictifs et doit constituer une équipe de cinq personnages d'anime, tirés au hasard dans les univers choisis par l'hôte du salon au moment de la création de la partie.</p>
+  <h3>Le tirage et les enchères</h3>
+  <p>À tour de rôle, un joueur pioche un personnage dans la réserve commune. Il fixe alors une mise de départ. Les autres joueurs peuvent ensuite surenchérir à tour de rôle ou se retirer de l'enchère ; le plus offrant remporte le personnage et voit son budget diminuer du montant de sa mise.</p>
+  <h3>Mode aveugle</h3>
+  <p>L'hôte peut activer un mode où seul le joueur qui vient de piocher connaît l'identité réelle du personnage : les autres doivent enchérir ou bluffer sans savoir précisément ce qui est en jeu.</p>
+  <h3>Faillite et vol de personnage</h3>
+  <p>Si un joueur épuise tout son budget avant d'avoir recruté ses cinq personnages, les tirages suivants qu'il effectue ne donnent plus lieu à une enchère classique : les autres joueurs peuvent alors « voler » le personnage pioché pour la somme symbolique d'un yen, s'ils le souhaitent.</p>
+  <h3>Fin de partie et vote des joueurs</h3>
+  <p>La partie s'arrête lorsque toutes les équipes sont complètes, que la réserve de personnages est épuisée, ou que plus personne n'est en mesure d'acquérir de nouveau personnage. Il n'y a pas de calcul automatique de la meilleure équipe : ce sont les joueurs eux-mêmes qui votent, en toute fin de partie, pour l'équipe qu'ils jugent la plus forte. Un match nul est tout à fait possible si les votes sont partagés.</p>
+
+  <h2>Chapitre 04 — L'Imposteur au Pinceau</h2>
+  <p>Ici, pas de mots pour se trahir : on s'exprime au <strong>pinceau</strong>. Chacun dessine son mot secret sans le rendre trop évident… car parmi vous se cache un imposteur qui dessine autre chose, ou qui ne sait même pas quoi dessiner !</p>
+  <h3>Les rôles</h3>
+  <ul>
+    <li><strong>Citoyens</strong> : ils ont le mot exact (ex. « Son Goku »).</li>
+    <li><strong>Undercover</strong> : il a un mot très proche (ex. « Vegeta ») et ne sait pas qu'il est l'intrus.</li>
+    <li><strong>Mr. White</strong> : il n'a aucun mot. Il doit bluffer en s'inspirant des autres.</li>
+  </ul>
+  <h3>Phase 1 — Distribution</h3>
+  <p>Chaque joueur découvre son mot en secret sur son écran (maintiens le bouton appuyé pour le voir), puis se déclare prêt. Dès que tout le monde est prêt, les pinceaux sont lâchés !</p>
+  <h3>Phase 2 — Dessin</h3>
+  <p>L'hôte choisit l'un des deux modes avant la partie :</p>
+  <ul>
+    <li><strong>Duel d'Ardoises</strong> : 45 secondes au chrono, chacun dessine en secret sur sa propre ardoise. Mr. White dispose d'un pouvoir, le <strong>Pass'Œil</strong> : une fois par manche, il peut jeter un coup d'œil de 3 secondes sur l'ardoise d'un de ses voisins pendant le chrono.</li>
+    <li><strong>Fresque Commune</strong> : une seule ardoise tourne entre tous les joueurs. À son tour, chacun ajoute <strong>un seul trait continu</strong> (on lève le doigt, le trait est envoyé, pas de retouche !) pour compléter le dessin collectif.</li>
+  </ul>
+  <h3>Phase 3 — Vote</h3>
+  <p>Tous les dessins sont dévoilés. Le groupe débat, puis chacun vote pour le joueur qu'il soupçonne. Le plus voté est éliminé et son rôle est révélé. Si Mr. White est éliminé, il a une dernière chance : s'il devine le mot des citoyens, il gagne seul.</p>
+  <h3>Phase 4 — Prolongations</h3>
+  <p>Si le vote échoue (égalité, ou un innocent éliminé), <strong>la manche continue !</strong> On garde les mêmes rôles secrets, mais on efface tous les dessins et chacun reçoit <strong>un nouveau mot de la même catégorie</strong>. Tout le monde repart pour un tour de dessin, avec plus d'indices pour démasquer l'imposteur.</p>
+  <h3>Fin de partie</h3>
+  <p>Les citoyens gagnent quand tous les imposteurs sont éliminés. Les imposteurs gagnent s'ils deviennent aussi nombreux que les citoyens encore en jeu.</p>
+
+  <h2>Question ou suggestion ?</h2>
+  <p>Vous pouvez consulter notre <a href="/a-propos.html">page à propos</a> pour plus d'informations sur le projet, ou notre <a href="/confidentialite.html">politique de confidentialité</a>.</p>
+    </article>
+
+    <nav class="ou-page-footer">
+      <a href="/regles.html">Règles du jeu</a>
+      <a href="/a-propos.html">À propos</a>
+      <a href="/confidentialite.html">Confidentialité</a>
+      <a href="/mentions-legales.html">Mentions légales</a>
+    </nav>
+  </main>
+</div>
+<script>
+  // Même pseudo que dans le jeu (enregistré par l'app React).
+  try {
+    var n = localStorage.getItem('otaku_undercover_player_name');
+    if (n) {
+      document.getElementById('ou-user-name').textContent = n;
+      document.getElementById('ou-user-avatar').textContent = n.charAt(0).toUpperCase();
+    }
+  } catch (e) {}
+</script>
+</body>
+</html>

@@ -1,32 +1,44 @@
 import React, { useState } from 'react';
-import PrimaryButton from '../components/PrimaryButton';
+import RoomFormCard from '../components/RoomFormCard';
+import { IconPlus } from '../components/OuShell';
 
-export default function CreateRoomScreen({ defaultName, onBack, onCreate, creating, error }) {
+export default function CreateRoomScreen({ chapter, defaultName, onBack, onCreate, creating, error }) {
   const [name, setName] = useState(defaultName || '');
+  const disabled = name.trim().length === 0 || creating;
+
+  function submit(e) {
+    e.preventDefault();
+    if (!disabled) onCreate(name.trim());
+  }
 
   return (
-    <div className="screen screen-centered">
-      <button type="button" className="back-link" onClick={onBack}>← Retour</button>
-      <h2 className="screen-title">Créer un salon</h2>
-      <p className="screen-subtitle">Choisis ton pseudo, tu seras l'hôte de la partie.</p>
+    <RoomFormCard
+      chapter={chapter}
+      eyebrow={<>Ouvre la partie.<br />Deviens <em>l'hôte.</em></>}
+      title="CRÉER UN SALON"
+      subtitle="Choisis ton pseudo, tu seras l'hôte de la partie. Tu pourras ensuite inviter tes potes avec un code."
+      onBack={onBack}
+    >
+      <form className="ou-form" onSubmit={submit}>
+        <label className="ou-field">
+          <span className="ou-field-label">Ton pseudo</span>
+          <input
+            type="text"
+            className="ou-input"
+            placeholder="Ex. Naruto77"
+            value={name}
+            maxLength={20}
+            autoFocus
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
 
-      <input
-        type="text"
-        className="text-input"
-        style={{ maxWidth: 260, margin: '0 auto 16px', display: 'block' }}
-        placeholder="Ton pseudo"
-        value={name}
-        maxLength={20}
-        onChange={(e) => setName(e.target.value)}
-      />
+        {error && <p className="ou-form-error">{error}</p>}
 
-      {error && <p style={{ color: 'var(--color-danger)', fontWeight: 600, marginBottom: 12 }}>{error}</p>}
-
-      <PrimaryButton
-        title={creating ? 'Création du salon...' : 'Créer le salon'}
-        disabled={name.trim().length === 0 || creating}
-        onClick={() => onCreate(name.trim())}
-      />
-    </div>
+        <button type="submit" className="ou-btn ou-btn--create ou-btn--wide" disabled={disabled}>
+          <IconPlus /> {creating ? 'Création du salon...' : 'Créer le salon'}
+        </button>
+      </form>
+    </RoomFormCard>
   );
 }
