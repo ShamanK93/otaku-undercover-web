@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import AnimeCheckboxRow from '../components/AnimeCheckboxRow';
+import { getAnimeImage } from '../utils/wordImages';
 import PrimaryButton from '../components/PrimaryButton';
 import { ANIME_LIST } from '../data/animeDatabase';
 import { countMatchingPairs } from '../utils/gameLogic';
@@ -90,11 +91,12 @@ export default function AnimeSelectionScreen({
             {allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
           </button>
         </div>
-        <div className="anime-grid" style={{ flex: 'none', maxHeight: 260 }}>
+        <div className="anime-grid" style={{ flex: 'none', maxHeight: 380 }}>
           {filteredAnime.map((anime) => (
             <AnimeCheckboxRow
               key={anime.id}
               title={anime.title}
+              image={getAnimeImage(anime.id)}
               checked={selectedIds.includes(anime.id)}
               onToggle={() => toggleAnime(anime.id)}
             />

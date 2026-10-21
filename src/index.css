@@ -866,3 +866,65 @@ img { max-width: 100%; display: block; }
   margin: 0 0 24px;
 }
 
+
+/* ---------- Mot + image (WordVisual) ---------- */
+
+.word-visual { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.word-visual-frame {
+  position: relative; display: block; width: 96px; aspect-ratio: 3 / 4; overflow: hidden;
+  border-radius: 8px; border: 2px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(135deg, #2A2F3F, #12141C);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.word-visual-frame img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; display: block; }
+.word-visual-fallback {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 40px; font-weight: 900; color: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(135deg, rgba(224, 32, 58, 0.55), rgba(124, 77, 255, 0.45)), #1B1F2B;
+}
+.word-visual-text { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; min-width: 0; }
+.word-visual-word { font-weight: 800; font-size: 15px; line-height: 1.2; overflow-wrap: anywhere; }
+.word-visual-caption { color: var(--color-muted); font-size: 12px; font-weight: 600; }
+
+.word-visual--lg .word-visual-frame { width: 150px; border-width: 3px; }
+.word-visual--lg .word-visual-word { font-size: 22px; }
+.word-visual--lg .word-visual-fallback { font-size: 64px; }
+
+.word-visual--sm { flex-direction: row; gap: 8px; }
+.word-visual--sm .word-visual-frame { width: 28px; border-width: 1px; border-radius: 4px; box-shadow: none; }
+.word-visual--sm .word-visual-fallback { font-size: 13px; }
+.word-visual--sm .word-visual-text { align-items: flex-start; text-align: left; }
+.word-visual--sm .word-visual-word { font-size: 12px; font-weight: 700; }
+
+.word-visual-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; justify-items: center; }
+.word-visual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 12px; }
+.word-visual-grid .word-visual-frame { width: 100%; }
+
+/* Révélation : l'image prend la place du texte dans le bouton. */
+.reveal-btn .word-visual-caption,
+.reveal-btn.revealed .word-visual-caption { color: rgba(255, 255, 255, 0.8); }
+
+/* Étiquette « affiche + titre » de l'animé en cours */
+.anime-tag {
+  display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--color-secondary); font-weight: 700; font-size: 14px;
+}
+.anime-tag img { width: 24px; height: 34px; object-fit: cover; border-radius: 4px; display: block; }
+
+/* Sélection des animés : pastilles en affiche */
+.anime-grid:has(.anime-chip--poster) { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.anime-chip--poster { padding: 0; min-height: 0; aspect-ratio: 3 / 4; overflow: hidden; align-items: flex-end; }
+.anime-chip-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s, filter 0.2s; }
+.anime-chip--poster::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgba(5, 6, 10, 0.95) 0%, rgba(5, 6, 10, 0.55) 35%, rgba(5, 6, 10, 0) 65%);
+}
+.anime-chip--poster .anime-chip-title {
+  position: relative; z-index: 1; width: 100%; padding: 8px 6px; font-size: 12px;
+  text-shadow: 0 1px 3px #000;
+}
+.anime-chip--poster .chip-check { z-index: 2; }
+.anime-chip--poster:hover .anime-chip-img { transform: scale(1.05); }
+.anime-chip--poster.checked { box-shadow: inset 0 0 0 2px var(--color-primary); }
+.anime-chip--poster.checked .anime-chip-img { filter: saturate(1.15) brightness(1.05); }

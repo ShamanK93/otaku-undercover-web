@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PrimaryButton from '../components/PrimaryButton';
+import WordVisual from '../components/WordVisual';
 
 export default function TeamPlayScreen({
   room,
@@ -59,7 +60,7 @@ export default function TeamPlayScreen({
             <div className="team-roster">
               {(teams[id] || []).map((c, i) => (
                 <div key={i} className="team-roster-row">
-                  <span>{c.name}</span>
+                  <WordVisual anime={c.anime} word={c.name} size="sm" />
                 </div>
               ))}
               {(teams[id] || []).length === 0 && <p style={{ color: 'var(--color-muted)', fontSize: 12 }}>Aucun personnage.</p>}
@@ -80,13 +81,12 @@ export default function TeamPlayScreen({
 
       {draw && (
         <div className="clue-turn-box" style={{ marginBottom: 16 }}>
-          <p style={{ textAlign: 'center', fontWeight: 800, fontSize: 18, marginBottom: 4 }}>
-            {isBlindHidden ? '??? (personnage mystère)' : draw.character.name}
-          </p>
-          {!isBlindHidden && (
-            <p style={{ textAlign: 'center', color: 'var(--color-muted)', fontSize: 12, marginBottom: 14 }}>
-              {draw.character.anime}
-            </p>
+          {isBlindHidden ? (
+            <p style={{ textAlign: 'center', fontWeight: 800, fontSize: 18, marginBottom: 4 }}>??? (personnage mystère)</p>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+              <WordVisual anime={draw.character.anime} word={draw.character.name} caption={draw.character.anime} size="lg" />
+            </div>
           )}
           {isBlindHidden && (
             <p style={{ textAlign: 'center', color: 'var(--color-muted)', fontSize: 12, marginBottom: 14 }}>

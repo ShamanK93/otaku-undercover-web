@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import AnimeCheckboxRow from '../components/AnimeCheckboxRow';
+import { getAnimeImage } from '../utils/wordImages';
 import PrimaryButton from '../components/PrimaryButton';
 import { CHARACTER_DATABASE } from '../data/characterDatabase';
 
@@ -54,6 +55,7 @@ export default function TeamAnimeSelectScreen({ selectedIds, setSelectedIds, onB
           <AnimeCheckboxRow
             key={anime.id}
             title={anime.title}
+            image={getAnimeImage(anime.id)}
             checked={selectedIds.includes(anime.id)}
             onToggle={() => toggle(anime.id)}
           />

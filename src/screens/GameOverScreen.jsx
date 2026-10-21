@@ -1,5 +1,6 @@
 import React from 'react';
 import PlayerAvatar from '../components/PlayerAvatar';
+import WordVisual, { AnimeTag } from '../components/WordVisual';
 import PrimaryButton from '../components/PrimaryButton';
 
 const WINNER_INFO = {
@@ -27,11 +28,11 @@ export default function GameOverScreen({ room, isHost, onReplay, onBackToLobby }
       </div>
 
       <div className="card">
-        <p style={{ color: 'var(--color-secondary)', fontWeight: 700, textAlign: 'center', marginBottom: 12 }}>{room.game.anime}</p>
-        <p style={{ color: 'var(--color-muted)', fontSize: 13, marginTop: 8, marginBottom: 2 }}>Mot des civils</p>
-        <p style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{room.game.civilWord}</p>
-        <p style={{ color: 'var(--color-muted)', fontSize: 13, marginTop: 8, marginBottom: 2 }}>Mot des undercovers</p>
-        <p style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{room.game.undercoverWord}</p>
+        <p style={{ textAlign: 'center', marginBottom: 14 }}><AnimeTag anime={room.game.anime} /></p>
+        <div className="word-visual-pair">
+          <WordVisual anime={room.game.anime} word={room.game.civilWord} caption="Mot des civils" />
+          <WordVisual anime={room.game.anime} word={room.game.undercoverWord} caption="Mot des undercovers" />
+        </div>
       </div>
 
       <div className="screen-list" style={{ marginBottom: 12 }}>

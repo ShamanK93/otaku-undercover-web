@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DrawingCanvas, { CHALK_COLORS, strokesOf } from '../components/DrawingCanvas';
 import { fresqueTurn, neighbours } from '../utils/drawGame';
+import WordVisual from '../components/WordVisual';
 
 function useNow() {
   const [now, setNow] = useState(Date.now());
@@ -35,12 +36,14 @@ function Toolbar({ color, setColor, width, setWidth, onUndo }) {
   );
 }
 
-function WordReminder({ role }) {
+function WordReminder({ role, anime }) {
   if (!role) return null;
   return (
     <div className="rule-reminder">
       <span className="rule-reminder-label">Ton mot</span>
-      <span className="rule-reminder-text">{role.role === 'mrwhite' ? 'Aucun (Mr. White)' : role.word}</span>
+      {role.role === 'mrwhite'
+        ? <span className="rule-reminder-text">Aucun (Mr. White)</span>
+        : <WordVisual anime={anime} word={role.word} size="sm" />}
     </div>
   );
 }
@@ -80,7 +83,7 @@ export default function DrawPlayScreen({
       <div className="screen">
         <p className="filter-eyebrow">Fresque commune · tour de table {Math.min(turn.lap, laps)}/{laps}</p>
         <h2 className="screen-title">{isMyTurn ? 'À toi : un seul trait !' : `${name(turn.currentId)} dessine…`}</h2>
-        {isAlive && <WordReminder role={myRole} />}
+        {isAlive && <WordReminder role={myRole} anime={game.anime} />}
         {timer}
 
         <DrawingCanvas strokes={strokesOf(game.fresque)} editable={isMyTurn} color={color} width={width} onStroke={handleStroke} />
@@ -115,7 +118,7 @@ export default function DrawPlayScreen({
     <div className="screen">
       <p className="filter-eyebrow">Duel d'ardoises · dessine en secret</p>
       <h2 className="screen-title">À tes pinceaux !</h2>
-      {isAlive && <WordReminder role={myRole} />}
+      {isAlive && <WordReminder role={myRole} anime={game.anime} />}
       {timer}
 
       {isAlive ? (

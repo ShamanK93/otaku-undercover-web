@@ -457,6 +457,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   border-color: var(--ou-red); background: rgba(224, 32, 58, 0.14);
 }
 .ou-home .chip-check { background: var(--ou-red); }
+.ou-home .anime-chip--poster.checked { box-shadow: inset 0 0 0 3px var(--ou-red); }
 .ou-home .checkbox-box { border-color: var(--ou-red); border-radius: 3px; }
 .ou-home .checkbox-box.checked { background: var(--ou-red); border-color: var(--ou-red); }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import PrimaryButton from '../components/PrimaryButton';
 import PlayerAvatar from '../components/PlayerAvatar';
+import WordVisual from '../components/WordVisual';
 import { DRAW_ROLE_LABELS } from './DrawResultScreen';
 
 const WINNER_TEXT = {
@@ -17,9 +18,10 @@ export default function DrawGameOverScreen({ room, isHost, onReplay, onBackToLob
     <div className="screen">
       <p className="filter-eyebrow">Fin de partie · {game.round} manche{game.round > 1 ? 's' : ''}</p>
       <h2 className="screen-title">{WINNER_TEXT[game.winner] || 'Partie terminée'}</h2>
-      <p className="screen-subtitle">
-        Dernier mot des citoyens : <strong>{game.civilWord}</strong> · mot de l'undercover : <strong>{game.undercoverWord}</strong>
-      </p>
+      <div className="word-visual-pair" style={{ marginBottom: 18 }}>
+        <WordVisual anime={game.anime} word={game.civilWord} caption="Dernier mot des citoyens" />
+        <WordVisual anime={game.anime} word={game.undercoverWord} caption="Mot de l'undercover" />
+      </div>
 
       <div className="lobby-players">
         {Object.keys(game.roles).map((id) => (

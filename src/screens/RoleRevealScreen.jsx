@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import HoldToRevealButton from '../components/HoldToRevealButton';
+import WordVisual, { AnimeTag } from '../components/WordVisual';
+import { preloadWordImage } from '../utils/wordImages';
 
 export default function RoleRevealScreen({ room, playerId, onReady }) {
   const myRole = room.game.roles[playerId];
@@ -10,13 +12,17 @@ export default function RoleRevealScreen({ room, playerId, onReady }) {
   const iAmReady = Boolean(ready[playerId]);
 
   const secretLabel =
-    myRole.role === 'mrwhite' ? "Tu es Mr. White (tu n'as pas de mot)" : myRole.word;
+    myRole.role === 'mrwhite'
+      ? "Tu es Mr. White (tu n'as pas de mot)"
+      : <WordVisual anime={room.game.anime} word={myRole.word} size="lg" />;
+
+  useEffect(() => { preloadWordImage(room.game.anime, myRole.word); }, [room.game.anime, myRole.word]);
 
   return (
     <div className="screen screen-centered">
       <p style={{ color: 'var(--color-muted)', textAlign: 'center' }}>Ton rôle secret</p>
-      <p style={{ color: 'var(--color-secondary)', fontSize: 14, textAlign: 'center', margin: '4px 0 24px', fontWeight: 600 }}>
-        {room.game.anime}
+      <p style={{ textAlign: 'center', margin: '4px 0 24px' }}>
+        <AnimeTag anime={room.game.anime} />
       </p>
 
       {!iAmReady ? (

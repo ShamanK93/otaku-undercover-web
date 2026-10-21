@@ -1,5 +1,6 @@
 import React from 'react';
 import PrimaryButton from '../components/PrimaryButton';
+import WordVisual from '../components/WordVisual';
 
 export default function TeamGameOverScreen({ room, playerId, isHost, onVote, onReplay, onBackToLobby }) {
   const players = room.players || {};
@@ -56,11 +57,11 @@ export default function TeamGameOverScreen({ room, playerId, isHost, onVote, onR
                 </button>
               )}
             </div>
-            {(teams[id] || []).map((c, i) => (
-              <div key={i} style={{ color: 'var(--color-muted)', fontSize: 13, marginBottom: 2 }}>
-                {c.name}
-              </div>
-            ))}
+            <div className="word-visual-grid">
+              {(teams[id] || []).map((c, i) => (
+                <WordVisual key={i} anime={c.anime} word={c.name} caption={c.anime} />
+              ))}
+            </div>
             {(teams[id] || []).length === 0 && <p style={{ color: 'var(--color-muted)', fontSize: 12 }}>Aucun personnage.</p>}
           </div>
         ))}

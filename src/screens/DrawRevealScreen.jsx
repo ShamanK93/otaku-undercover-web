@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import HoldToRevealButton from '../components/HoldToRevealButton';
+import WordVisual, { AnimeTag } from '../components/WordVisual';
+import { preloadWordImage } from '../utils/wordImages';
 
 // Phase « Distribution » (et retour de distribution pendant les prolongations).
 export default function DrawRevealScreen({ room, playerId, onReady }) {
@@ -14,7 +16,10 @@ export default function DrawRevealScreen({ room, playerId, onReady }) {
   const secretLabel =
     myRole && myRole.role === 'mrwhite'
       ? "Tu es Mr. White : tu n'as pas de mot. Observe, et sers-toi de ton Pass'Œil !"
-      : myRole && myRole.word;
+      : myRole && <WordVisual anime={game.anime} word={myRole.word} size="lg" />;
+
+  const myWord = myRole && myRole.word;
+  useEffect(() => { preloadWordImage(game.anime, myWord); }, [game.anime, myWord]);
 
   return (
     <div className="screen screen-centered">
@@ -27,8 +32,8 @@ export default function DrawRevealScreen({ room, playerId, onReady }) {
         {game.round > 1 ? 'Nouveau mot · même catégorie' : 'Distribution'}
       </p>
       <h2 className="screen-title" style={{ alignSelf: 'center' }}>Ton mot secret</h2>
-      <p style={{ color: 'var(--color-secondary)', fontSize: 14, textAlign: 'center', margin: '0 0 22px', fontWeight: 700 }}>
-        {game.anime}
+      <p style={{ textAlign: 'center', margin: '0 0 22px' }}>
+        <AnimeTag anime={game.anime} />
       </p>
 
       {!isAlive ? (
