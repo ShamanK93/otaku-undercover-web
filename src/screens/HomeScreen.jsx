@@ -8,7 +8,6 @@ import { CHAPTERS } from '../data/chapters';
 function ChapterCard({ chapter, onCreate, onJoin }) {
   return (
     <article className={`ou-chapter ou-chapter--${chapter.accent}`}>
-      <div className={`ou-chapter-thumb ou-chapter-thumb--${chapter.number}`} aria-hidden="true" />
       <span className="ou-chapter-tag">Chapitre {chapter.number}</span>
 
       <div className="ou-chapter-body">

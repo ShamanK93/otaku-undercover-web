@@ -165,8 +165,8 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 .ou-chapter {
   --accent: var(--ou-line);
   position: relative;
-  display: grid; grid-template-columns: 290px 1fr auto; align-items: center; gap: 0 22px;
-  min-height: 138px; padding-right: 110px;
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 22px;
+  min-height: 138px; padding: 0 110px 0 28px;
   background: var(--ou-panel);
   border: 2px solid var(--accent); border-radius: 6px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
@@ -188,9 +188,9 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(to bottom left, transparent calc(50% - 2px), var(--accent) calc(50% - 2px), var(--accent) calc(50% + 1px), transparent calc(50% + 1px)) right / 14% 100% no-repeat;
 }
-.ou-chapter-thumb--01 { background-image: url('/images/chapitre-01.jpg'); background-position: 30% 30%; }
-.ou-chapter-thumb--02 { background-image: url('/images/chapitre-02.jpg'); background-position: 50% 18%; }
-.ou-chapter-thumb--03 { background-image: url('/images/chapitre-03.jpg'); background-position: 50% 35%; }
+.ou-chapter-thumb--01 { background-image: url('/images/chapitre-01.jpg'); background-position: 50% 50%; }
+.ou-chapter-thumb--02 { background-image: url('/images/chapitre-02.jpg'); background-position: 50% 50%; }
+.ou-chapter-thumb--03 { background-image: url('/images/chapitre-03.jpg'); background-position: 50% 50%; }
 
 .ou-chapter-tag {
   position: absolute; top: -2px; left: -2px; z-index: 2;
@@ -202,7 +202,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 }
 .ou-chapter--grey .ou-chapter-tag { color: #111; }
 
-.ou-chapter-body { padding: 18px 0; min-width: 0; }
+.ou-chapter-body { padding: 42px 0 18px; min-width: 0; }
 .ou-chapter-title {
   font-family: var(--ou-brush); font-weight: 400; font-size: 25px; line-height: 1.1;
   letter-spacing: 0.5px; margin: 0 0 10px; transform: rotate(-1deg);
@@ -228,10 +228,15 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   background: linear-gradient(90deg, var(--ou-red-dark), var(--ou-red) 25%, var(--ou-red) 80%, #C4182F);
   clip-path: polygon(1% 18%, 8% 4%, 50% 0, 97% 6%, 100% 30%, 98% 55%, 100% 85%, 90% 100%, 40% 96%, 3% 100%, 0 70%, 2% 45%);
 }
+/* Chaque chapitre a son bouton « Créer » dans sa couleur (carte d'accueil et formulaire). */
 .ou-chapter--grey .ou-btn--create,
-.ou-chapter--purple .ou-btn--create {
-  background: linear-gradient(90deg, #2B2E38, #3A3E4A 50%, #2B2E38);
-  color: #C9CBD3;
+.ou-accent--grey .ou-btn--create {
+  background: linear-gradient(90deg, #A9ACB6, #D9DBE2 25%, #D9DBE2 80%, #B8BBC4);
+  color: #111;
+}
+.ou-chapter--purple .ou-btn--create,
+.ou-accent--purple .ou-btn--create {
+  background: linear-gradient(90deg, #6A4FD1, var(--ou-purple) 25%, var(--ou-purple) 80%, #7E5FE6);
 }
 .ou-btn--join {
   background: rgba(5, 6, 10, 0.6);
@@ -244,7 +249,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   font-family: var(--ou-jp); font-weight: 900; white-space: nowrap;
   font-size: 40px; line-height: 1; color: rgba(255, 255, 255, 0.13); pointer-events: none;
 }
-.ou-chapter--red .ou-chapter-emblem { color: rgba(255, 255, 255, 0.18); }
+.ou-chapter--red .ou-chapter-emblem { color: rgba(224, 32, 58, 0.3); }
 .ou-chapter--purple .ou-chapter-emblem { color: rgba(155, 123, 255, 0.3); }
 
 /* ----- Écrans Créer / Rejoindre ----- */
@@ -271,16 +276,11 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 .ou-accent--grey .ou-chapter-tag { color: #111; }
 
 .ou-form-banner {
-  position: relative; height: 150px;
-  background-size: cover; background-repeat: no-repeat;
+  position: relative; padding: 46px 24px 14px;
   border-bottom: 2px solid var(--accent);
 }
-.ou-form-banner::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(10, 11, 18, 0.9) 100%);
-}
 .ou-form-banner-title {
-  position: absolute; left: 20px; bottom: 12px; z-index: 1;
+  display: block;
   font-family: var(--ou-brush); font-size: 22px; text-shadow: 2px 2px 0 #000;
 }
 .ou-form-body { padding: 26px 24px 26px; }
@@ -499,7 +499,8 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 .ou-chapter--gold .ou-chapter-tag,
 .ou-accent--gold .ou-chapter-tag { color: #111; }
 .ou-chapter--gold .ou-chapter-emblem { color: rgba(242, 181, 68, 0.3); }
-.ou-chapter--gold .ou-btn--create { background: linear-gradient(90deg, #2B2E38, #3A3E4A 50%, #2B2E38); color: #C9CBD3; }
+.ou-chapter--gold .ou-btn--create,
+.ou-accent--gold .ou-btn--create { background: linear-gradient(90deg, #C98A1E, var(--ou-gold) 25%, var(--ou-gold) 80%, #D99A2B); color: #111; }
 .ou-form-card.ou-accent--gold { --accent: var(--ou-gold); }
 .ou-home .ou-game.ou-accent--gold { --accent: var(--ou-gold); }
 
@@ -633,7 +634,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 }
 
 @media (max-width: 1100px) {
-  .ou-chapter { grid-template-columns: 200px 1fr auto; padding-right: 20px; }
+  .ou-chapter { grid-template-columns: 1fr auto; padding-right: 20px; }
   .ou-chapter-emblem { display: none; }
   .ou-main { padding-right: 36px; }
   .ou-topbar { margin-right: -36px; }
@@ -659,7 +660,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   .ou-chapter { grid-template-columns: 1fr; padding: 0; }
   .ou-chapter-thumb { height: 170px; clip-path: none; border-radius: 4px 4px 0 0; }
   .ou-chapter-thumb::after { display: none; }
-  .ou-chapter-body { padding: 16px 16px 4px; }
+  .ou-chapter-body { padding: 44px 16px 4px; }
   .ou-chapter-actions { width: auto; padding: 8px 16px 18px; }
   .ou-hero-title { font-size: 52px; }
   .ou-hero--compact .ou-hero-title { font-size: 38px; display: inline-block; }

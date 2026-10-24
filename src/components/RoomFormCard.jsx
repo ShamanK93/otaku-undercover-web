@@ -18,7 +18,7 @@ export default function RoomFormCard({ chapter, eyebrow, title, subtitle, onBack
       <article className={`ou-form-card ou-accent--${accent}`}>
         <span className="ou-chapter-tag">{chapter ? `Chapitre ${chapter.number}` : 'Salon privé'}</span>
         {chapter && (
-          <div className={`ou-form-banner ou-chapter-thumb--${chapter.number}`} aria-hidden="true">
+          <div className="ou-form-banner" aria-hidden="true">
             <span className="ou-form-banner-title">{chapter.title}</span>
           </div>
         )}
