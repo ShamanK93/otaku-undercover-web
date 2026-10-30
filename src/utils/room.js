@@ -424,12 +424,13 @@ export async function skipTurn(code, room) {
 
 // Le joueur dont c'est le tour propose un personnage : tous les autres
 // joueurs devront ensuite dire, chacun selon sa propre règle secrète, si ce
-// personnage correspond ou non.
-export async function proposeCharacter(code, room, playerId, character) {
+// personnage correspond ou non. animeId : animé du personnage s'il vient de
+// la base (pour afficher son image), sinon null (nom saisi librement).
+export async function proposeCharacter(code, room, playerId, character, animeId = null) {
   const current = room.rule.turnOrder[room.rule.turnIndex];
   if (current !== playerId) return;
   await update(ref(db, `rooms/${code}`), {
-    'rule/pendingPropose': { by: playerId, character: character.trim(), answers: {} },
+    'rule/pendingPropose': { by: playerId, character: character.trim(), animeId, answers: {} },
     'rule/deadline': actionDeadline(room),
   });
 }
@@ -451,7 +452,7 @@ export async function answerProposal(code, room, playerId, matches) {
     const finalAnswers = { ...pending.answers, [playerId]: matches };
     const logId = newLogId();
     await update(ref(db, `rooms/${code}`), {
-      [`rule/log/${logId}`]: { type: 'propose', by: pending.by, character: pending.character, answers: finalAnswers },
+      [`rule/log/${logId}`]: { type: 'propose', by: pending.by, character: pending.character, animeId: pending.animeId || null, answers: finalAnswers },
       'rule/logOrder': [...(room.rule.logOrder || []), logId],
       'rule/pendingPropose': null,
       'rule/turnIndex': nextTurnIndex(room),

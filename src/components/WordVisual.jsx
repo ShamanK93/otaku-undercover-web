@@ -4,7 +4,9 @@ import { getAnimeImage, getWordImage } from '../utils/wordImages';
 // Un mot (personnage, technique...) avec son image. Sans image connue, une
 // vignette avec l'initiale prend sa place pour garder la même mise en page.
 // size : 'lg' (révélation, pioche), 'md' (fin de partie), 'sm' (listes).
-export default function WordVisual({ anime, word, size = 'md', caption }) {
+// unknownMark : afficher « ? » au lieu de l'initiale quand il n'y a pas d'image
+// (saisie libre d'un personnage absent de la base).
+export default function WordVisual({ anime, word, size = 'md', caption, unknownMark = false }) {
   const src = getWordImage(anime, word);
   return (
     <figure className={`word-visual word-visual--${size}`}>
@@ -12,7 +14,9 @@ export default function WordVisual({ anime, word, size = 'md', caption }) {
         {src ? (
           <img src={src} alt="" loading={size === 'sm' ? 'lazy' : 'eager'} draggable="false" />
         ) : (
-          <span className="word-visual-fallback" aria-hidden="true">{(word || '?').charAt(0).toUpperCase()}</span>
+          <span className={`word-visual-fallback${unknownMark ? ' word-visual-fallback--unknown' : ''}`} aria-hidden="true">
+            {unknownMark ? '?' : (word || '?').charAt(0).toUpperCase()}
+          </span>
         )}
       </span>
       <figcaption className="word-visual-text">

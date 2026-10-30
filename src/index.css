@@ -928,3 +928,31 @@ img { max-width: 100%; display: block; }
 .anime-chip--poster:hover .anime-chip-img { transform: scale(1.05); }
 .anime-chip--poster.checked { box-shadow: inset 0 0 0 2px var(--color-primary); }
 .anime-chip--poster.checked .anime-chip-img { filter: saturate(1.15) brightness(1.05); }
+
+/* « ? » pour un personnage saisi librement, absent de la base */
+.word-visual-fallback--unknown {
+  font-size: 48px;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.08), transparent 70%), #12141C;
+}
+.word-visual--lg .word-visual-fallback--unknown { font-size: 80px; }
+.word-visual--sm .word-visual-fallback--unknown { font-size: 16px; }
+
+/* Devine la règle : suggestions pendant la saisie d'un personnage */
+.char-suggest {
+  display: flex; flex-direction: column; margin-bottom: 12px; max-height: 240px; overflow-y: auto;
+  border: 1.5px solid rgba(255, 255, 255, 0.16); border-radius: 6px; background: rgba(5, 6, 10, 0.85);
+}
+.char-suggest-row {
+  display: flex; align-items: center; width: 100%; padding: 6px 10px; text-align: left;
+  background: none; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: inherit; cursor: pointer;
+}
+.char-suggest-row:last-child { border-bottom: none; }
+.char-suggest-row:hover, .char-suggest-row:focus-visible { background: rgba(255, 255, 255, 0.08); outline: none; }
+.char-suggest-row .word-visual-frame { width: 32px; }
+
+/* Devine la règle : récap des personnages en fin de partie */
+.rule-recap { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; }
+.rule-recap-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.rule-recap-answers { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.rule-recap-answers .reward-pill { font-size: 11px; }

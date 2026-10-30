@@ -1,12 +1,15 @@
 import React from 'react';
 import PlayerAvatar from '../components/PlayerAvatar';
 import PrimaryButton from '../components/PrimaryButton';
+import WordVisual from '../components/WordVisual';
 
 export default function RuleGameOverScreen({ room, isHost, onReplay, onBackToLobby }) {
   const players = room.players || {};
   const rules = room.rule.rules || {};
   const revealed = room.rule.revealed || {};
   const outcome = room.rule.outcome;
+  const log = room.rule.log || {};
+  const proposals = (room.rule.logOrder || []).map((id) => log[id]).filter((e) => e && e.type === 'propose');
 
   return (
     <div className="screen">
@@ -41,6 +44,28 @@ export default function RuleGameOverScreen({ room, isHost, onReplay, onBackToLob
           </div>
         ))}
       </div>
+
+      {proposals.length > 0 && (
+        <>
+          <p className="filter-section-title" style={{ marginBottom: 10 }}>
+            Récap des personnages proposés ({proposals.length})
+          </p>
+          <div className="rule-recap" style={{ marginBottom: 20 }}>
+            {proposals.map((entry, i) => (
+              <div key={i} className="rule-recap-item">
+                <WordVisual anime={entry.animeId} word={entry.character} caption={`par ${players[entry.by]?.name || '?'}`} unknownMark />
+                <div className="rule-recap-answers">
+                  {Object.entries(entry.answers || {}).map(([pid, val]) => (
+                    <span key={pid} className="reward-pill" style={{ color: val ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                      {players[pid]?.name} {val ? '✓' : '✗'}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {isHost ? (
         <>

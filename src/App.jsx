@@ -354,7 +354,7 @@ export default function App() {
                     room={room}
                     playerId={playerId}
                     isHost={isHost}
-                    onProposeCharacter={(character) => proposeCharacter(code, room, playerId, character)}
+                    onProposeCharacter={(character, animeId) => proposeCharacter(code, room, playerId, character, animeId)}
                     onAnswerProposal={(matches) => answerProposal(code, room, playerId, matches)}
                     onStartGuess={(targetId, text) => startGuess(code, room, playerId, targetId, text)}
                     onStartRevengeGuess={(text) => startRevengeGuess(code, room, playerId, text)}

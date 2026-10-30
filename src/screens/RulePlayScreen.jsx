@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PrimaryButton from '../components/PrimaryButton';
+import WordVisual from '../components/WordVisual';
+import { findCharacter, searchCharacters } from '../utils/wordImages';
 
 export default function RulePlayScreen({
   room,
@@ -28,6 +30,7 @@ export default function RulePlayScreen({
 
   const [mode, setMode] = useState(null); // null | 'propose' | 'guess'
   const [character, setCharacter] = useState('');
+  const [pickedAnimeId, setPickedAnimeId] = useState(null); // suggestion choisie dans la liste
   const [guessTarget, setGuessTarget] = useState('');
   const [guessText, setGuessText] = useState('');
   const [revengeText, setRevengeText] = useState('');
@@ -53,6 +56,7 @@ export default function RulePlayScreen({
     autoActed.current = null;
     setMode(null);
     setCharacter('');
+    setPickedAnimeId(null);
     setGuessTarget('');
     setGuessText('');
     setRevengeText('');
@@ -77,13 +81,21 @@ export default function RulePlayScreen({
   function resetLocal() {
     setMode(null);
     setCharacter('');
+    setPickedAnimeId(null);
     setGuessTarget('');
     setGuessText('');
   }
 
+  // Personnage reconnu : suggestion cliquée, ou nom tapé en entier qui
+  // existe dans la base. Sinon, nom libre (image « ? »).
+  const exactMatch = pickedAnimeId ? null : findCharacter(character);
+  const resolvedAnimeId = pickedAnimeId || (exactMatch && exactMatch.animeId) || null;
+  const resolvedName = exactMatch ? exactMatch.name : character.trim();
+  const suggestions = pickedAnimeId || exactMatch ? [] : searchCharacters(character);
+
   function submitPropose() {
     if (!character.trim()) return;
-    onProposeCharacter(character);
+    onProposeCharacter(resolvedName, resolvedAnimeId);
     resetLocal();
   }
 
@@ -154,8 +166,11 @@ export default function RulePlayScreen({
       {pendingPropose && (
         <div className="clue-turn-box" style={{ marginBottom: 16 }}>
           <p style={{ textAlign: 'center', fontWeight: 700, marginBottom: 10 }}>
-            {players[pendingPropose.by]?.name} propose : <span style={{ color: 'var(--color-primary)' }}>{pendingPropose.character}</span>
+            {players[pendingPropose.by]?.name} propose :
           </p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+            <WordVisual anime={pendingPropose.animeId} word={pendingPropose.character} size="lg" unknownMark />
+          </div>
           {pendingPropose.by === playerId ? (
             <p className="lobby-waiting">En attente des réponses des autres joueurs...</p>
           ) : iAlreadyAnsweredProposal ? (
@@ -204,16 +219,35 @@ export default function RulePlayScreen({
       {!pendingPropose && !pendingGuess && !revengePending && isMyTurn && mode === 'propose' && (
         <div className="clue-turn-box" style={{ marginBottom: 16 }}>
           <p style={{ textAlign: 'center', fontWeight: 700, marginBottom: 10 }}>Quel personnage proposes-tu ?</p>
+          {character.trim() && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <WordVisual anime={resolvedAnimeId} word={resolvedName} size="md" unknownMark />
+            </div>
+          )}
           <input
             type="text"
             className="text-input"
-            style={{ width: '100%', textAlign: 'center', marginBottom: 12 }}
+            style={{ width: '100%', textAlign: 'center', marginBottom: suggestions.length ? 6 : 12 }}
             placeholder="Nom du personnage..."
             value={character}
             autoFocus
-            onChange={(e) => setCharacter(e.target.value)}
+            onChange={(e) => { setCharacter(e.target.value); setPickedAnimeId(null); }}
             onKeyDown={(e) => e.key === 'Enter' && submitPropose()}
           />
+          {suggestions.length > 0 && (
+            <div className="char-suggest" role="listbox">
+              {suggestions.map((c) => (
+                <button
+                  type="button"
+                  key={`${c.animeId}|${c.name}`}
+                  className="char-suggest-row"
+                  onClick={() => { setCharacter(c.name); setPickedAnimeId(c.animeId); }}
+                >
+                  <WordVisual anime={c.animeId} word={c.name} caption={c.animeTitle} size="sm" />
+                </button>
+              ))}
+            </div>
+          )}
           <PrimaryButton title="Proposer" onClick={submitPropose} disabled={!character.trim()} style={{ marginBottom: 8 }} />
           <button type="button" className="back-link" style={{ display: 'block', margin: '0 auto' }} onClick={resetLocal}>← Annuler</button>
         </div>
@@ -264,8 +298,9 @@ export default function RulePlayScreen({
           if (entry.type === 'propose') {
             return (
               <div key={id} className="clue-row" style={{ display: 'block' }}>
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                  {players[entry.by]?.name} propose <span style={{ color: 'var(--color-primary)' }}>{entry.character}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, marginBottom: 6 }}>
+                  <span>{players[entry.by]?.name} propose</span>
+                  <WordVisual anime={entry.animeId} word={entry.character} size="sm" unknownMark />
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {Object.entries(entry.answers || {}).map(([pid, val]) => (
