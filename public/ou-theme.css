@@ -26,6 +26,7 @@ html:has(.ou-home) { color-scheme: dark; background: #0A0B10; }
   font-family: var(--font-body);
 }
 .ou-home *, .ou-home *::before, .ou-home *::after { box-sizing: border-box; }
+.ou-home--plain { background: var(--ou-ink); }
 
 /* ----- Sidebar ----- */
 
@@ -165,8 +166,8 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 .ou-chapter {
   --accent: var(--ou-line);
   position: relative;
-  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0 22px;
-  min-height: 138px; padding: 0 110px 0 28px;
+  display: grid; grid-template-columns: 190px 1fr auto; align-items: center; gap: 0 22px;
+  min-height: 138px; padding: 0 110px 0 18px;
   background: var(--ou-panel);
   border: 2px solid var(--accent); border-radius: 6px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
@@ -202,13 +203,35 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 }
 .ou-chapter--grey .ou-chapter-tag { color: #111; }
 
-.ou-chapter-body { padding: 42px 0 18px; min-width: 0; }
+.ou-chapter-body { padding: 18px 0; min-width: 0; }
+
+/* Éventail de 3 portraits (tirés au hasard à chaque visite), qui s'ouvre au survol */
+.ou-chapter-fan {
+  position: relative; align-self: stretch;
+  display: flex; align-items: center; justify-content: center; padding: 34px 0 14px;
+}
+.ou-chapter-fan img {
+  width: 64px; aspect-ratio: 3 / 4; object-fit: cover; object-position: 50% 15%;
+  border: 2px solid var(--accent); border-radius: 6px; background: #12141C;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+  transition: transform 0.25s ease;
+}
+.ou-chapter-fan img + img { margin-left: -16px; }
+.ou-chapter-fan img:nth-child(1) { transform: rotate(-9deg) translateY(5px); }
+.ou-chapter-fan img:nth-child(2) { position: relative; z-index: 1; width: 72px; transform: translateY(-3px); }
+.ou-chapter-fan img:nth-child(3) { transform: rotate(9deg) translateY(5px); }
+.ou-chapter:hover .ou-chapter-fan img:nth-child(1) { transform: rotate(-15deg) translate(-12px, 3px); }
+.ou-chapter:hover .ou-chapter-fan img:nth-child(2) { transform: translateY(-9px) scale(1.04); }
+.ou-chapter:hover .ou-chapter-fan img:nth-child(3) { transform: rotate(15deg) translate(12px, 3px); }
+@media (prefers-reduced-motion: reduce) {
+  .ou-chapter-fan img { transition: none; }
+}
 .ou-chapter-title {
   font-family: var(--ou-brush); font-weight: 400; font-size: 25px; line-height: 1.1;
   letter-spacing: 0.5px; margin: 0 0 10px; transform: rotate(-1deg);
 }
-.ou-chapter-desc { margin: 0 0 14px; max-width: 330px; font-size: 12.5px; line-height: 1.45; color: #D4D6DD; }
-.ou-chapter-meta { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #E6E7EC; }
+.ou-chapter-desc { margin: 0 0 14px; max-width: 400px; font-size: 14.5px; font-weight: 600; line-height: 1.5; color: #F1F2F5; }
+.ou-chapter-meta { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #F1F2F5; }
 
 .ou-chapter-actions { display: flex; flex-direction: column; gap: 12px; width: 222px; }
 
@@ -634,7 +657,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 }
 
 @media (max-width: 1100px) {
-  .ou-chapter { grid-template-columns: 1fr auto; padding-right: 20px; }
+  .ou-chapter { grid-template-columns: 170px 1fr auto; padding-right: 20px; }
   .ou-chapter-emblem { display: none; }
   .ou-main { padding-right: 36px; }
   .ou-topbar { margin-right: -36px; }
@@ -660,7 +683,10 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   .ou-chapter { grid-template-columns: 1fr; padding: 0; }
   .ou-chapter-thumb { height: 170px; clip-path: none; border-radius: 4px 4px 0 0; }
   .ou-chapter-thumb::after { display: none; }
-  .ou-chapter-body { padding: 44px 16px 4px; }
+  .ou-chapter-fan { justify-content: flex-start; padding: 46px 16px 0 26px; }
+  .ou-chapter-fan img { width: 56px; }
+  .ou-chapter-fan img:nth-child(2) { width: 62px; }
+  .ou-chapter-body { padding: 12px 16px 4px; }
   .ou-chapter-actions { width: auto; padding: 8px 16px 18px; }
   .ou-hero-title { font-size: 52px; }
   .ou-hero--compact .ou-hero-title { font-size: 38px; display: inline-block; }

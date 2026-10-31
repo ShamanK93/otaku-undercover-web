@@ -1,14 +1,37 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import OuShell, { IconUser, IconPlus, IconKey } from '../components/OuShell';
 import { CHAPTERS } from '../data/chapters';
+import { ANIME_LIST } from '../data/animeDatabase';
+import { CHARACTER_IMAGES } from '../data/wordImages';
 
-// Illustrations dans public/images/ : fond.jpg (fond d'écran), chapitre-01.jpg,
-// chapitre-02.jpg, chapitre-03.jpg (vignettes) et sidebar.jpg (optionnelle).
+// L'accueil a un fond uni (sans fond.jpg) ; les cartes chapitre affichent des
+// portraits de personnages.
 
-function ChapterCard({ chapter, onCreate, onJoin }) {
+const PORTRAITS_PER_CARD = 3;
+const POPULAR_ANIME_COUNT = 20; // licences du début de la liste : visages connus
+
+// Tire au hasard des portraits tous différents, PORTRAITS_PER_CARD par carte.
+function pickPortraits(cardCount) {
+  const pool = ANIME_LIST.slice(0, POPULAR_ANIME_COUNT).flatMap((anime) =>
+    Object.entries(CHARACTER_IMAGES[anime.id] || {}).map(([name, src]) => ({ name, src })),
+  );
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return Array.from({ length: cardCount }, (_, c) => pool.slice(c * PORTRAITS_PER_CARD, (c + 1) * PORTRAITS_PER_CARD));
+}
+
+function ChapterCard({ chapter, portraits, onCreate, onJoin }) {
   return (
     <article className={`ou-chapter ou-chapter--${chapter.accent}`}>
       <span className="ou-chapter-tag">Chapitre {chapter.number}</span>
+
+      <div className="ou-chapter-fan" aria-hidden="true">
+        {portraits.map((p) => (
+          <img key={p.src} src={p.src} alt="" title={p.name} draggable="false" />
+        ))}
+      </div>
 
       <div className="ou-chapter-body">
         <h2 className="ou-chapter-title">{chapter.title}</h2>
@@ -33,8 +56,11 @@ function ChapterCard({ chapter, onCreate, onJoin }) {
 }
 
 export default function HomeScreen({ onCreate, onJoin }) {
+  // Nouveaux portraits à chaque arrivée sur l'accueil.
+  const portraits = useMemo(() => pickPortraits(CHAPTERS.length), []);
+
   return (
-    <OuShell active="home">
+    <OuShell active="home" plain>
       <section className="ou-hero">
         <p className="ou-hero-eyebrow">
           Un jeu. Des animes.<br />Une seule <em>vérité.</em>
@@ -47,8 +73,8 @@ export default function HomeScreen({ onCreate, onJoin }) {
       </section>
 
       <div className="ou-chapters">
-        {CHAPTERS.map((chapter) => (
-          <ChapterCard key={chapter.id} chapter={chapter} onCreate={onCreate} onJoin={onJoin} />
+        {CHAPTERS.map((chapter, i) => (
+          <ChapterCard key={chapter.id} chapter={chapter} portraits={portraits[i]} onCreate={onCreate} onJoin={onJoin} />
         ))}
       </div>
     </OuShell>

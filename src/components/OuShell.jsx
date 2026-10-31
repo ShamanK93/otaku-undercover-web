@@ -106,11 +106,12 @@ function SidebarLink({ item, active, onHome }) {
 }
 
 // active : 'home' | 'rules' | 'about' ; onHome : retour à l'accueil sans recharger la page.
-export default function OuShell({ active = 'home', onHome, children }) {
+// plain : fond uni, sans l'image fond.jpg (page d'accueil).
+export default function OuShell({ active = 'home', onHome, plain = false, children }) {
   const name = getSavedName() || 'Invité';
 
   return (
-    <div className="ou-home">
+    <div className={`ou-home${plain ? ' ou-home--plain' : ''}`}>
       <aside className="ou-sidebar">
         <a className="ou-logo" href="/" onClick={onHome ? (e) => { e.preventDefault(); onHome(); } : undefined}>
           <div className="ou-logo-text">
