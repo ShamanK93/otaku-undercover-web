@@ -762,3 +762,408 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   .ou-polaroid-buttons { flex-direction: column; }
   .ou-polaroid-buttons .ou-btn { min-width: 0; width: 100%; }
 }
+
+/* ===================================================================
+   Créer / Rejoindre : « fiche d'agent » (RoomFormCard)
+   =================================================================== */
+
+.ou-dossier-screen { position: relative; z-index: 1; padding-top: 28px; }
+.ou-dossier-screen .ou-back { position: relative; z-index: 2; margin-bottom: 22px; }
+
+.ou-dossier-layout {
+  display: grid; grid-template-columns: minmax(240px, 330px) minmax(0, 640px);
+  gap: clamp(28px, 4vw, 64px); align-items: start; justify-content: center;
+}
+
+/* --- Polaroïd du chapitre, accroché par sa pince --- */
+.ou-dossier-side { display: flex; flex-direction: column; align-items: center; gap: 26px; padding-top: 18px; }
+.ou-dossier-print {
+  position: relative; width: 100%; max-width: 300px;
+  background: #fbfaf7; padding: 12px 12px 0;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25), 0 30px 50px -18px rgba(0, 0, 0, 0.75);
+  transform: rotate(-3deg); transform-origin: 50% 0;
+  animation: ou-dossier-swing 6s ease-in-out infinite;
+}
+.ou-dossier-shot { position: relative; aspect-ratio: 3 / 4; overflow: hidden; background: #111; }
+.ou-dossier-shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ou-dossier-note {
+  height: 54px; display: flex; align-items: center; justify-content: center; text-align: center;
+  font: 400 18px/1.1 var(--ou-brush); color: #141414; letter-spacing: 0.4px;
+}
+.ou-dossier-peg {
+  position: absolute; left: 50%; top: -16px; width: 14px; height: 34px; margin-left: -7px; border-radius: 3px;
+  background: linear-gradient(90deg, #9E1023, #E0203A 45%, #9E1023); box-shadow: 0 3px 4px rgba(0, 0, 0, 0.4);
+}
+.ou-dossier-print--mystery .ou-dossier-shot { display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #3a0c14, #0a0b10 70%); }
+.ou-dossier-mystery { font: 400 120px/1 var(--ou-brush); color: var(--ou-red); text-shadow: 0 0 30px rgba(224, 32, 58, 0.6); }
+@keyframes ou-dossier-swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(-1.2deg); } }
+
+.ou-dossier-mission {
+  width: 100%; max-width: 300px; padding: 14px 16px;
+  background: rgba(10, 11, 16, 0.8); border-left: 3px solid var(--ou-red);
+  backdrop-filter: blur(4px);
+}
+.ou-dossier-mission-label {
+  display: block; font: 700 11px/1 var(--font-body); letter-spacing: 2.5px; text-transform: uppercase; color: var(--ou-red);
+}
+.ou-dossier-mission-title { display: block; margin: 6px 0 6px; font: 400 18px/1.15 var(--ou-brush); color: #fff; }
+.ou-dossier-mission-desc { margin: 0 0 8px; font-size: 13px; line-height: 1.5; color: #C9CBD3; }
+.ou-dossier-mission-meta { font-size: 12px; font-weight: 700; color: #9C9FAB; }
+
+/* --- Dossier confidentiel --- */
+.ou-dossier {
+  position: relative; overflow: hidden;
+  padding: 26px clamp(20px, 3vw, 38px) 30px;
+  background:
+    linear-gradient(180deg, rgba(224, 32, 58, 0.08), transparent 140px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 28px),
+    rgba(10, 11, 16, 0.92);
+  border: 1px solid rgba(224, 32, 58, 0.45);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 30px 60px -20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(224, 32, 58, 0.12);
+  backdrop-filter: blur(6px);
+  animation: ou-dossier-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ou-dossier::before { /* bande rouge façon onglet de dossier */
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--ou-red);
+}
+@keyframes ou-dossier-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.ou-dossier-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-bottom: 12px; margin-bottom: 18px; border-bottom: 1px dashed rgba(255, 255, 255, 0.18);
+}
+.ou-dossier-ref {
+  font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; text-transform: uppercase; color: #9C9FAB;
+}
+.ou-dossier-ref b { color: var(--ou-red); font-weight: 700; }
+.ou-dossier-kanji {
+  font: 900 22px/1 var(--ou-jp); color: var(--ou-red); opacity: 0.85;
+  border: 2px solid var(--ou-red); padding: 3px 6px; transform: rotate(6deg); border-radius: 3px;
+}
+.ou-dossier-kicker { margin: 0 0 6px; font: 400 15px/1.2 var(--ou-brush); color: #E3E4E9; text-transform: uppercase; }
+.ou-dossier-kicker em { font-style: normal; color: var(--ou-red); }
+.ou-dossier-title {
+  margin: 0 0 10px; font: 400 clamp(34px, 4.4vw, 56px)/0.95 var(--ou-brush); color: #fff;
+  text-transform: uppercase; text-shadow: 3px 3px 0 #000; letter-spacing: 1px;
+}
+.ou-dossier-sub { margin: 0 0 24px; max-width: 520px; font-size: 14.5px; line-height: 1.55; color: #C9CBD3; }
+.ou-dossier-body .ou-form { gap: 22px; }
+
+/* --- Nom de code (ligne de signature) --- */
+.ou-codename { display: flex; flex-direction: column; gap: 6px; }
+.ou-codename-label {
+  display: flex; align-items: baseline; gap: 8px;
+  font: 700 11px/1 var(--font-body); letter-spacing: 2.5px; text-transform: uppercase; color: var(--ou-red);
+}
+.ou-codename-hint { color: #7d808c; letter-spacing: 1px; text-transform: none; font-weight: 600; font-size: 12px; }
+.ou-codename-count { margin-left: auto; font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #7d808c; letter-spacing: 1px; }
+.ou-codename-input {
+  width: 100%; padding: 6px 2px 10px; border: none; border-bottom: 2px solid rgba(255, 255, 255, 0.28);
+  background: transparent; color: #fff; caret-color: var(--ou-red);
+  font: 400 clamp(28px, 3.4vw, 40px)/1.15 var(--ou-brush); letter-spacing: 1px;
+  transition: border-color 0.2s ease;
+}
+.ou-codename-input::placeholder { color: rgba(255, 255, 255, 0.16); }
+.ou-codename-input:focus { outline: none; border-bottom-color: var(--ou-red); }
+
+/* --- Code du salon en 5 cases --- */
+.ou-roomcode { display: flex; flex-direction: column; gap: 10px; }
+.ou-roomcode-boxes { position: relative; display: flex; gap: 10px; }
+.ou-roomcode-box {
+  flex: 1 1 0; max-width: 72px; aspect-ratio: 4 / 5; display: grid; place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 4px; background: rgba(255, 255, 255, 0.03);
+  font: 800 clamp(24px, 3vw, 34px)/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #fff;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.ou-roomcode-box--filled { border-color: rgba(224, 32, 58, 0.7); background: rgba(224, 32, 58, 0.1); }
+.ou-roomcode-box--active { border-color: var(--ou-red); box-shadow: 0 0 0 3px rgba(224, 32, 58, 0.25); transform: translateY(-2px); }
+.ou-roomcode-input {
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: text;
+  font-size: 16px; /* évite le zoom auto sur iOS */
+}
+
+/* --- Carte d'agent + tampon --- */
+.ou-agent {
+  position: relative; display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: 4px;
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.ou-agent-avatar {
+  flex: 0 0 auto; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+  font: 400 24px/1 var(--ou-brush); color: #fff; background: #2a2d38; border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+.ou-agent--ready .ou-agent-avatar { background: var(--ou-red); border-color: #fff; }
+.ou-agent-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ou-agent-label { font: 700 10px/1 var(--font-body); letter-spacing: 2.5px; text-transform: uppercase; color: #7d808c; }
+.ou-agent-name { font-weight: 800; font-size: 17px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ou-agent-extra { font-size: 12.5px; color: #9C9FAB; }
+.ou-agent-stamp {
+  margin-left: auto; flex: 0 0 auto;
+  padding: 6px 12px; border: 3px solid var(--ou-red); border-radius: 4px;
+  font: 400 18px/1 var(--ou-brush); color: var(--ou-red); letter-spacing: 2px; text-transform: uppercase;
+  transform: rotate(-10deg) scale(1.8); opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.4, 1), opacity 0.2s ease;
+}
+.ou-agent--ready .ou-agent-stamp { transform: rotate(-10deg) scale(1); opacity: 0.92; }
+
+.ou-dossier-body .ou-btn--wide { min-height: 54px; font-size: 14px; letter-spacing: 1.2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ou-dossier-print, .ou-dossier { animation: none; }
+  .ou-agent-stamp { transition: none; }
+}
+
+@media (max-width: 900px) {
+  .ou-dossier-layout { grid-template-columns: 1fr; gap: 24px; }
+  .ou-dossier-side { flex-direction: row; align-items: center; gap: 18px; padding-top: 14px; }
+  .ou-dossier-print { max-width: 150px; padding: 7px 7px 0; }
+  .ou-dossier-note { height: 34px; font-size: 11px; }
+  .ou-dossier-peg { top: -12px; width: 10px; height: 24px; margin-left: -5px; }
+  .ou-dossier-mystery { font-size: 64px; }
+  .ou-dossier-mission { max-width: none; flex: 1; }
+}
+@media (max-width: 480px) {
+  .ou-dossier-mission-desc { display: none; }
+  .ou-roomcode-boxes { gap: 7px; }
+  .ou-agent-stamp { font-size: 14px; padding: 5px 8px; }
+}
+
+/* ===================================================================
+   Salon et écrans de jeu : même DA « dossier d'agent » que Créer / Rejoindre
+   (ces règles viennent après les anciennes et les remplacent)
+   =================================================================== */
+
+/* --- Le panneau de jeu devient un dossier --- */
+.ou-home .game-panel.ou-game {
+  border: 1px solid rgba(224, 32, 58, 0.45); border-radius: 4px;
+  background:
+    linear-gradient(180deg, rgba(224, 32, 58, 0.07), transparent 160px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 28px),
+    rgba(10, 11, 16, 0.92);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 30px 60px -20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(224, 32, 58, 0.12);
+  backdrop-filter: blur(6px);
+  overflow: hidden;
+  animation: ou-dossier-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ou-home .game-panel.ou-game::after { /* bande rouge façon onglet de dossier */
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--ou-red); pointer-events: none;
+}
+.ou-game-head {
+  position: relative; z-index: 1; display: flex; align-items: center; gap: 14px;
+  margin: 0 clamp(18px, 3vw, 34px); padding: 18px 0 12px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.18);
+}
+.ou-game-mission {
+  font: 400 15px/1.1 var(--ou-brush); color: #fff; letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.ou-game-head .ou-dossier-kanji { margin-left: auto; flex: 0 0 auto; font-size: 18px; }
+.ou-home .ou-game .screen { padding: 22px clamp(18px, 3vw, 34px) 32px; }
+
+/* --- Titres et petits libellés --- */
+.ou-home .screen-title { transform: none; margin: 2px 0 18px; font-size: clamp(30px, 3.6vw, 46px); text-transform: uppercase; }
+.ou-home .screen-title::after { bottom: -9px; height: 6px; }
+.ou-home .filter-eyebrow,
+.ou-home .room-code-label,
+.ou-home .players-count-label,
+.ou-home .filter-section-title,
+.ou-home .lobby-players-title,
+.ou-home .summary-card-label,
+.ou-home .rule-reminder-label,
+.ou-home .stepper-label {
+  font: 700 11px/1.2 var(--font-body); font-style: normal; letter-spacing: 2.5px; text-transform: uppercase; color: var(--ou-red);
+}
+.ou-home .filter-eyebrow { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; color: #9C9FAB; }
+.ou-home .screen-subtitle,
+.ou-home .setup-hint,
+.ou-home .lobby-waiting { color: #C9CBD3; }
+.ou-home .lobby-waiting { font-style: italic; }
+.ou-home .back-link { color: #9C9FAB; letter-spacing: 1.5px; }
+
+/* --- Salon : deux colonnes sur grand écran --- */
+.ou-home .lobby-screen { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 clamp(28px, 4vw, 56px); align-items: start; }
+@media (min-width: 1100px) {
+  .ou-home .lobby-screen { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); }
+  .ou-home .lobby-col--settings { padding-top: 8px; }
+  .ou-home .lobby-col--settings .lobby-host-controls { border-top: none; padding-top: 0; margin-top: 0; }
+}
+.ou-home .lobby-col { min-width: 0; display: flex; flex-direction: column; }
+.ou-home .lobby-col--settings > .lobby-waiting {
+  padding: 18px; border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 4px; text-align: center;
+}
+
+/* --- Code du salon : 5 cases --- */
+.ou-home .room-code-box {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 16px 18px; background: rgba(224, 32, 58, 0.06); border: 1px solid rgba(224, 32, 58, 0.5); border-radius: 4px;
+}
+.ou-home .room-code-value { display: flex; gap: 8px; margin-top: 10px; font-size: 0; letter-spacing: 0; }
+.ou-home .room-code-char {
+  display: grid; place-items: center; width: clamp(40px, 4vw, 54px); aspect-ratio: 4 / 5;
+  border: 2px solid rgba(224, 32, 58, 0.75); border-radius: 4px; background: rgba(10, 11, 16, 0.75);
+  font: 800 clamp(22px, 2.4vw, 30px)/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #fff;
+}
+.ou-home .copy-btn {
+  align-self: center; padding: 10px 16px; border: none; border-radius: 3px;
+  background: var(--ou-red); color: #fff; font: 800 12px/1 var(--font-body); letter-spacing: 1.2px; text-transform: uppercase;
+}
+.ou-home .invite-link-btn {
+  margin-top: 10px; padding: 12px; border: 1px dashed rgba(255, 255, 255, 0.28); border-radius: 4px;
+  background: transparent; color: #E3E4E9; font: 800 12px/1 var(--font-body); letter-spacing: 1.2px; text-transform: uppercase;
+}
+.ou-home .invite-link-btn:hover { border-color: var(--ou-red); background: rgba(224, 32, 58, 0.08); }
+
+/* --- Compteur de joueurs + liste des agents --- */
+.ou-home .players-count-display { flex-direction: row; align-items: baseline; justify-content: flex-start; gap: 12px; margin: 22px 0 10px; }
+.ou-home .players-count-number { font-size: 52px; line-height: 1; color: #fff; }
+.ou-home .lobby-players { display: flex; flex-direction: column; gap: 8px; }
+.ou-home .lobby-player-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px;
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  font-weight: 800; font-size: 15px;
+}
+.ou-home .lobby-player-row:last-child { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.ou-home .avatar {
+  background: var(--ou-red); color: #fff; border: 2px solid #fff;
+  font-family: var(--ou-brush); font-weight: 400;
+}
+.ou-home .host-tag,
+.ou-home .you-tag {
+  clip-path: none; padding: 3px 8px; border: 2px solid var(--ou-red); border-radius: 3px; background: transparent;
+  font: 400 12px/1 var(--ou-brush); letter-spacing: 1.5px; text-transform: uppercase; color: var(--ou-red);
+  transform: rotate(-6deg);
+}
+.ou-home .host-tag { margin-left: auto; }
+.ou-home .you-tag { border-color: rgba(255, 255, 255, 0.7); color: #fff; transform: rotate(4deg); }
+.ou-home .lobby-player-row .host-tag + .you-tag { margin-left: 4px; }
+.ou-home .lobby-player-row > .you-tag:not(.host-tag + .you-tag) { margin-left: auto; }
+
+/* --- Réglages de l'hôte --- */
+.ou-home .stepper {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  padding: 12px 14px; margin-bottom: 8px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px;
+}
+.ou-home .stepper-label { color: #E3E4E9; letter-spacing: 1.5px; }
+.ou-home .stepper-controls { display: flex; align-items: center; gap: 14px; }
+.ou-home .stepper-btn {
+  width: 36px; height: 36px; border-radius: 3px; background: transparent; border: 2px solid var(--ou-red);
+  color: #fff; font-size: 20px; font-weight: 800; line-height: 1;
+}
+.ou-home .stepper-btn:hover { background: var(--ou-red); }
+.ou-home .stepper-value { min-width: 34px; text-align: center; font: 800 20px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #fff; }
+.ou-home .intrus-box {
+  display: grid; place-items: center; min-height: 70px; margin-bottom: 4px;
+  font-size: 44px; background: rgba(224, 32, 58, 0.1); border: 1px solid rgba(224, 32, 58, 0.55);
+}
+.ou-home .summary-row-cards { gap: 8px; }
+.ou-home .summary-card,
+.ou-home .anime-pick-btn {
+  padding: 14px; background: linear-gradient(110deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 4px; text-align: left;
+}
+.ou-home .summary-card:hover:not(.summary-card--static),
+.ou-home .anime-pick-btn:hover { border-color: var(--ou-red); }
+.ou-home .summary-card-value { font: 800 18px/1.2 var(--font-body); color: #fff; }
+.ou-home .toggle-switch { border: 1px solid rgba(255, 255, 255, 0.2); }
+.ou-home .lobby-hint { margin: 12px 0 4px; font-weight: 700; color: #FF6B7F; }
+
+/* --- Boutons --- */
+.ou-home .ou-game .btn { min-height: 52px; font-size: 13.5px; letter-spacing: 1.2px; }
+.ou-home .btn-secondary,
+.ou-home .btn-outline { border: 1px solid rgba(255, 255, 255, 0.6); background: rgba(10, 11, 16, 0.6); }
+.ou-home .btn-secondary:hover,
+.ou-home .btn-outline:hover { border-color: var(--ou-red); background: rgba(224, 32, 58, 0.1); }
+
+/* --- Cartes et encadrés de jeu --- */
+.ou-home .card,
+.ou-home .clue-turn-box,
+.ou-home .team-panel,
+.ou-home .info-card,
+.ou-home .stat-card,
+.ou-home .big-stat {
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 4px;
+}
+.ou-home .clue-turn-box { position: relative; padding: 20px 20px 20px 24px; }
+.ou-home .clue-turn-box::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--ou-red); }
+.ou-home .list-row,
+.ou-home .clue-row {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px;
+}
+.ou-home .list-row:hover { border-color: rgba(224, 32, 58, 0.6); }
+.ou-home .list-row.selected,
+.ou-home .clue-row--active,
+.ou-home .team-panel--active { border-color: var(--ou-red); background: rgba(224, 32, 58, 0.12); box-shadow: inset 3px 0 0 var(--ou-red); }
+.ou-home .reward-pill {
+  border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 3px; background: rgba(10, 11, 16, 0.6);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700;
+}
+.ou-home .vote-count { border-radius: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.ou-home .clue-timer { font-size: 44px; color: #fff; }
+.ou-home .clue-timer--low { color: var(--ou-red); animation: ou-timer-pulse 1s ease-in-out infinite; }
+@keyframes ou-timer-pulse { 50% { transform: scale(1.08); } }
+
+/* Rappel de règle / de mot : encart « mission » */
+.ou-home .rule-reminder {
+  background: rgba(10, 11, 16, 0.75); border: none; border-left: 3px solid var(--ou-red); border-radius: 0 4px 4px 0;
+}
+.ou-home .rule-spectator { border-radius: 0 4px 4px 0; border-width: 0 0 0 3px; }
+
+/* « Maintiens appuyé pour voir ton secret » : enveloppe classée secrète */
+.ou-home .reveal-btn {
+  position: relative; min-height: 190px; overflow: hidden;
+  border: 1px dashed rgba(224, 32, 58, 0.7); border-radius: 4px;
+  background:
+    repeating-linear-gradient(-45deg, rgba(224, 32, 58, 0.07) 0 12px, transparent 12px 24px),
+    rgba(10, 11, 16, 0.85);
+  font: 700 13px/1.4 var(--font-body); letter-spacing: 2px; text-transform: uppercase; color: #E3E4E9;
+}
+.ou-home .reveal-btn:not(.revealed)::after {
+  content: "TOP SECRET"; position: absolute; right: 14px; top: 14px; padding: 4px 10px;
+  border: 2px solid var(--ou-red); border-radius: 3px; transform: rotate(8deg);
+  font: 400 14px/1 var(--ou-brush); letter-spacing: 2px; color: var(--ou-red); opacity: 0.85;
+}
+.ou-home .reveal-btn.revealed { border: 1px solid var(--ou-red); background: rgba(10, 11, 16, 0.95); text-transform: none; letter-spacing: 0; }
+
+/* Champs de saisie en jeu : style « ligne de signature » comme le nom de code */
+.ou-home .ou-game .text-input {
+  border: none; border-bottom: 2px solid rgba(255, 255, 255, 0.28); border-radius: 0; background: transparent;
+  padding: 10px 4px; font-size: 17px; caret-color: var(--ou-red);
+}
+.ou-home .ou-game .text-input:focus { box-shadow: none; border-bottom-color: var(--ou-red); }
+
+@media (max-width: 680px) {
+  .ou-game-mission { display: none; }
+  .ou-home .room-code-box { flex-direction: column; align-items: stretch; }
+  .ou-home .copy-btn { align-self: stretch; }
+  .ou-home .room-code-char { width: auto; flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ou-home .game-panel.ou-game, .ou-home .clue-timer--low { animation: none; }
+}
+
+/* Code du salon : passe à la ligne au lieu de déborder quand la colonne est étroite */
+.ou-home .room-code-box { flex-wrap: wrap; }
+.ou-home .room-code-char { width: clamp(36px, 3vw, 48px); }
+.ou-home .copy-btn { flex: 0 0 auto; }
+
+/* Nombre d'intrus : chiffres lisibles (la police pinceau rend le 1 comme un trait) */
+.ou-home .intrus-box { font: 800 40px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* Fin de partie : verdict tamponné */
+.ou-verdict { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 10px 0 22px; }
+.ou-verdict-label {
+  font: 700 11px/1 var(--font-body); letter-spacing: 3px; text-transform: uppercase; color: #9C9FAB;
+}
+.ou-verdict-title {
+  margin: 0; padding: 10px 22px; border: 4px solid var(--ou-red); border-radius: 6px;
+  font: 400 clamp(28px, 3.6vw, 44px)/1 var(--ou-brush); letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ou-red); transform: rotate(-4deg);
+  text-shadow: none; box-shadow: inset 0 0 0 2px rgba(224, 32, 58, 0.25);
+  animation: ou-verdict-stamp 0.45s cubic-bezier(0.3, 1.6, 0.4, 1) both;
+}
+@keyframes ou-verdict-stamp { from { transform: rotate(-4deg) scale(1.9); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ou-verdict-title { animation: none; } }

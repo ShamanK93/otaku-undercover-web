@@ -19,7 +19,7 @@ export default function RuleGameOverScreen({ room, isHost, onReplay, onBackToLob
         </h2>
       )}
       {outcome && outcome.type === 'tie' && (
-        <h2 className="screen-title" style={{ marginTop: 20, textAlign: 'center' }}>Égalité !</h2>
+        <h2 className="screen-title" style={{ marginTop: 20, textAlign: 'center' }}>Égalité !</h2>
       )}
       {!outcome && (
         <h2 className="screen-title" style={{ marginTop: 20, textAlign: 'center' }}>Partie terminée</h2>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import RoomFormCard from '../components/RoomFormCard';
+import RoomFormCard, { AgentCard, CodenameField } from '../components/RoomFormCard';
 import { IconPlus } from '../components/OuShell';
 
 export default function CreateRoomScreen({ chapter, defaultName, onBack, onCreate, creating, error }) {
@@ -14,29 +14,19 @@ export default function CreateRoomScreen({ chapter, defaultName, onBack, onCreat
   return (
     <RoomFormCard
       chapter={chapter}
-      eyebrow={<>Ouvre la partie.<br />Deviens <em>l'hôte.</em></>}
-      title="CRÉER UN SALON"
-      subtitle="Choisis ton pseudo, tu seras l'hôte de la partie. Tu pourras ensuite inviter tes potes avec un code."
+      kicker={<>Ouvre la partie. Deviens <em>l'hôte.</em></>}
+      title="Créer un salon"
+      subtitle="Choisis ton nom de code. Tu recevras ensuite un code de salon à partager avec tes potes."
       onBack={onBack}
     >
       <form className="ou-form" onSubmit={submit}>
-        <label className="ou-field">
-          <span className="ou-field-label">Ton pseudo</span>
-          <input
-            type="text"
-            className="ou-input"
-            placeholder="Ex. Naruto77"
-            value={name}
-            maxLength={20}
-            autoFocus
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
+        <CodenameField value={name} onChange={setName} autoFocus />
+        <AgentCard name={name} role="Hôte" extra="Rôle : hôte de la partie" />
 
         {error && <p className="ou-form-error">{error}</p>}
 
         <button type="submit" className="ou-btn ou-btn--create ou-btn--wide" disabled={disabled}>
-          <IconPlus /> {creating ? 'Création du salon...' : 'Créer le salon'}
+          <IconPlus /> {creating ? 'Création du salon...' : 'Ouvrir le salon'}
         </button>
       </form>
     </RoomFormCard>

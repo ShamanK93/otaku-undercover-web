@@ -18,7 +18,7 @@ export default function VoteScreen({ room, playerId, isHost, onCastVote, onFinal
 
   return (
     <div className="screen">
-      <h2 className="screen-title">Qui élimine-t-on ?</h2>
+      <h2 className="screen-title">Qui élimine-t-on ?</h2>
       <p className="screen-subtitle">Discutez à voix haute, puis chacun vote sur son écran.</p>
 
       <div className="screen-list">

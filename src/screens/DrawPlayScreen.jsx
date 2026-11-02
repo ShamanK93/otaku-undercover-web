@@ -117,7 +117,7 @@ export default function DrawPlayScreen({
   return (
     <div className="screen">
       <p className="filter-eyebrow">Duel d'ardoises · dessine en secret</p>
-      <h2 className="screen-title">À tes pinceaux !</h2>
+      <h2 className="screen-title">À tes pinceaux !</h2>
       {isAlive && <WordReminder role={myRole} anime={game.anime} />}
       {timer}
 

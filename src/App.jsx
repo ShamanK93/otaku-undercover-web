@@ -343,7 +343,13 @@ export default function App() {
           <OuShell active="home" onHome={confirmLeave}>
             <div className="ou-game-row">
               <div className={`game-panel ou-game ou-accent--${roomChapter ? roomChapter.accent : 'red'}`}>
-                <span className="ou-chapter-tag">{roomChapter ? `Chapitre ${roomChapter.number}` : 'Salon'}</span>
+                <header className="ou-game-head">
+                  <span className="ou-dossier-ref">
+                    Dossier {roomChapter ? `N° ${roomChapter.number}` : 'privé'} · <b>Confidentiel</b>
+                  </span>
+                  {roomChapter && <span className="ou-game-mission">{roomChapter.title}</span>}
+                  <span className="ou-dossier-kanji" aria-hidden="true">機密</span>
+                </header>
             {!room && (
               <div className="screen screen-centered">
                 <p style={{ textAlign: 'center', color: 'var(--color-muted)' }}>Connexion au salon...</p>

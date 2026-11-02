@@ -22,7 +22,7 @@ export default function DrawVoteScreen({ room, playerId, isHost, onCastVote, onF
   return (
     <div className="screen">
       <p className="filter-eyebrow">Vote · manche {game.round}</p>
-      <h2 className="screen-title">Qui tient le faux pinceau ?</h2>
+      <h2 className="screen-title">Qui tient le faux pinceau ?</h2>
 
       {isFresque ? (
         <DrawingCanvas strokes={strokesOf(game.fresque)} label="La fresque" />

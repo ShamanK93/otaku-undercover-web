@@ -20,7 +20,7 @@ export default function TeamGameOverScreen({ room, playerId, isHost, onVote, onR
               {players[outcome.winnerId]?.name} a la meilleure team !
             </h2>
           ) : (
-            <h2 className="screen-title" style={{ marginTop: 20, textAlign: 'center' }}>Égalité !</h2>
+            <h2 className="screen-title" style={{ marginTop: 20, textAlign: 'center' }}>Égalité !</h2>
           )}
           <p style={{ color: 'var(--color-muted)', textAlign: 'center', marginBottom: 16, fontSize: 13 }}>
             {playerIds.map((id) => `${players[id]?.name} : ${outcome.counts[id] || 0} vote${(outcome.counts[id] || 0) > 1 ? 's' : ''}`).join(' · ')}
@@ -28,7 +28,7 @@ export default function TeamGameOverScreen({ room, playerId, isHost, onVote, onR
         </>
       ) : (
         <>
-          <h2 className="screen-title" style={{ marginTop: 20, textAlign: 'center' }}>À vous de juger !</h2>
+          <h2 className="screen-title" style={{ marginTop: 20, textAlign: 'center' }}>À vous de juger !</h2>
           <p style={{ color: 'var(--color-muted)', textAlign: 'center', marginBottom: 8, fontSize: 13 }}>
             Regardez les équipes ci-dessous et votez pour la meilleure. Égalité possible.
           </p>

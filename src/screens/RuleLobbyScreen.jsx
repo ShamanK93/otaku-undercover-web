@@ -18,7 +18,8 @@ export default function RuleLobbyScreen({ code, room, playerId, isHost, onChange
   }
 
   return (
-    <div className="screen">
+    <div className="screen lobby-screen">
+      <div className="lobby-col lobby-col--info">
       <button type="button" className="back-link" onClick={onLeave}>← Quitter le salon</button>
 
       <p className="filter-eyebrow">Salon {code}</p>
@@ -28,7 +29,9 @@ export default function RuleLobbyScreen({ code, room, playerId, isHost, onChange
       <div className="room-code-box">
         <div>
           <div className="room-code-label">Code du salon</div>
-          <div className="room-code-value">{code}</div>
+          <div className="room-code-value" aria-label={`Code du salon : ${code}`}>
+            {code.split('').map((c, i) => <span key={i} className="room-code-char">{c}</span>)}
+          </div>
         </div>
         <button type="button" className="copy-btn" onClick={() => copy(code, 'code')}>
           {copied === 'code' ? 'Copié !' : 'Copier'}
@@ -55,6 +58,9 @@ export default function RuleLobbyScreen({ code, room, playerId, isHost, onChange
         ))}
       </div>
 
+      </div>
+
+      <div className="lobby-col lobby-col--settings">
       {isHost ? (
         <div className="lobby-host-controls">
           <Stepper
@@ -73,6 +79,7 @@ export default function RuleLobbyScreen({ code, room, playerId, isHost, onChange
       ) : (
         <p className="lobby-waiting">En attente que l'hôte lance la partie...</p>
       )}
+      </div>
     </div>
   );
 }

@@ -4,9 +4,9 @@ import WordVisual, { AnimeTag } from '../components/WordVisual';
 import PrimaryButton from '../components/PrimaryButton';
 
 const WINNER_INFO = {
-  civils: { title: 'Les Civils gagnent', color: 'var(--color-success)', icon: '🧑‍🤝‍🧑' },
-  intrus: { title: 'Les Intrus gagnent', color: 'var(--color-primary)', icon: '👁️' },
-  mrwhite: { title: 'Mr. White gagne', color: 'var(--color-secondary)', icon: '❓' },
+  civils: { title: 'Les Civils gagnent' },
+  intrus: { title: 'Les Intrus gagnent' },
+  mrwhite: { title: 'Mr. White gagne' },
 };
 
 const ROLE_LABELS = {
@@ -22,9 +22,9 @@ export default function GameOverScreen({ room, isHost, onReplay, onBackToLobby }
 
   return (
     <div className="screen">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20, marginBottom: 8 }}>
-        <span style={{ fontSize: 26 }}>{info.icon}</span>
-        <h2 style={{ fontSize: 24, fontWeight: 900, color: info.color }}>{info.title}</h2>
+      <div className="ou-verdict">
+        <span className="ou-verdict-label">Verdict</span>
+        <h2 className="ou-verdict-title">{info.title}</h2>
       </div>
 
       <div className="card">
