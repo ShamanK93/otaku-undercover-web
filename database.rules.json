@@ -1,0 +1,78 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "roomAges": {
+      ".indexOn": ".value",
+      ".read": "auth != null && query.orderByValue === true && query.limitToFirst !== null && query.limitToFirst <= 50",
+      "$code": {
+        ".write": "auth != null && (newData.exists() ? (!data.exists() && newData.val() === now && root.child('rooms').child($code).child('hostId').val() === auth.uid) : (!root.child('rooms').child($code).exists() || data.val() <= now - 43200000))",
+        ".validate": "newData.isNumber() && $code.matches(/^[A-HJ-NP-Z2-9]{5}$/)"
+      }
+    },
+    "rooms": {
+      "$code": {
+        ".validate": "$code.matches(/^[A-HJ-NP-Z2-9]{5}$/)",
+        ".read": "auth != null && data.child('players').child(auth.uid).exists()",
+        ".write": "auth != null && ((!data.exists() && newData.child('hostId').val() === auth.uid && newData.child('players').child(auth.uid).exists() && newData.child('createdAt').exists()) || (data.exists() && !newData.exists() && (data.child('hostId').val() === auth.uid || !data.child('players').exists() || !data.child('createdAt').exists() || data.child('createdAt').val() <= now - 43200000)))",
+
+        "hostId": {
+          ".validate": "newData.isString() && (!data.exists() || newData.val() === data.val())"
+        },
+        "gameType": {
+          ".validate": "newData.isString() && newData.val().matches(/^(undercover|rule|team|drawing)$/) && (!data.exists() || newData.val() === data.val())"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && (data.exists() ? newData.val() === data.val() : newData.val() === now)"
+        },
+
+        "players": {
+          "$pid": {
+            ".write": "auth != null && auth.uid === $pid && (data.exists() || root.child('rooms').child($code).child('phase').val() === 'lobby')",
+            ".validate": "newData.hasChildren(['name'])",
+            "name": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24"
+            },
+            "joinedAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+
+        "phase": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms').child($code).child('players').child(auth.uid).exists()",
+          ".validate": "newData.isString() && newData.val().length <= 32"
+        },
+        "settings": {
+          ".write": "auth != null && root.child('rooms').child($code).child('players').child(auth.uid).exists()"
+        },
+        "selectedAnimeIds": {
+          ".write": "auth != null && root.child('rooms').child($code).child('players').child(auth.uid).exists()"
+        },
+        "selectedTypes": {
+          ".write": "auth != null && root.child('rooms').child($code).child('players').child(auth.uid).exists()"
+        },
+        "selectedDifficulties": {
+          ".write": "auth != null && root.child('rooms').child($code).child('players').child(auth.uid).exists()"
+        },
+        "game": {
+          ".write": "auth != null && root.child('rooms').child($code).child('players').child(auth.uid).exists()"
+        },
+        "rule": {
+          ".write": "auth != null && root.child('rooms').child($code).child('players').child(auth.uid).exists()"
+        },
+        "team": {
+          ".write": "auth != null && root.child('rooms').child($code).child('players').child(auth.uid).exists()"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}

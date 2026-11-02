@@ -33,7 +33,7 @@ import { ANIME_LIST } from './data/animeDatabase';
 import { CHARACTER_DATABASE } from './data/characterDatabase';
 import { firebaseReady } from './firebase';
 import {
-  getOrCreatePlayerId,
+  getPlayerId,
   getSavedName,
   createRoom,
   joinRoom,
@@ -110,7 +110,7 @@ export default function App() {
   const [showTeamAnimeSelect, setShowTeamAnimeSelect] = useState(false);
   const [draftTeamAnimeIds, setDraftTeamAnimeIds] = useState([]);
 
-  const playerId = getOrCreatePlayerId();
+  const playerId = getPlayerId();
   const unsubRef = useRef(null);
 
   useEffect(() => {
@@ -227,6 +227,24 @@ export default function App() {
     );
   }
 
+  // Connexion anonyme à Firebase impossible (désactivée dans la console, ou
+  // pas de réseau) : sans identité, la base refuse toute lecture et écriture.
+  if (!playerId) {
+    return (
+      <OuShell active="home">
+        <div className="game-panel ou-game">
+          <div className="screen">
+            <h2 className="screen-title">Connexion impossible</h2>
+            <p style={{ color: 'var(--color-muted)', lineHeight: 1.6 }}>
+              Impossible de se connecter au serveur de jeu pour le moment. Vérifie ta connexion
+              internet puis recharge la page.
+            </p>
+          </div>
+        </div>
+      </OuShell>
+    );
+  }
+
   const isHost = room && room.hostId === playerId;
   const roomChapter = room ? getChapter(room.gameType || 'undercover') : null;
 
@@ -324,7 +342,7 @@ export default function App() {
         {code && (
           <OuShell active="home" onHome={confirmLeave}>
             <div className="ou-game-row">
-              <div className={`game-panel ou-game ou-accent--${roomChapter ? roomChapter.accent : 'grey'}`}>
+              <div className={`game-panel ou-game ou-accent--${roomChapter ? roomChapter.accent : 'red'}`}>
                 <span className="ou-chapter-tag">{roomChapter ? `Chapitre ${roomChapter.number}` : 'Salon'}</span>
             {!room && (
               <div className="screen screen-centered">

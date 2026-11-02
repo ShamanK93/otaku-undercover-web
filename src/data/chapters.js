@@ -1,4 +1,5 @@
 // Modes de jeu affichés sur l'accueil et rappelés sur les écrans Créer / Rejoindre.
+// DA noir et rouge : tous les chapitres utilisent l'accent rouge.
 export const CHAPTERS = [
   {
     id: 'undercover',
@@ -12,7 +13,7 @@ export const CHAPTERS = [
   {
     id: 'rule',
     number: '02',
-    accent: 'grey',
+    accent: 'red',
     title: 'DEVINE LA RÈGLE',
     desc: 'Chacun choisit une règle secrète. Propose des personnages ou tente de percer la règle des autres.',
     minPlayers: 2,
@@ -21,7 +22,7 @@ export const CHAPTERS = [
   {
     id: 'team',
     number: '03',
-    accent: 'purple',
+    accent: 'red',
     title: 'CONSTRUIS TA TEAM',
     desc: '20¥ de budget, des enchères à tour de rôle. Recrute 5 personnages, à 2 joueurs ou plus.',
     minPlayers: 2,
@@ -30,7 +31,7 @@ export const CHAPTERS = [
   {
     id: 'drawing',
     number: '04',
-    accent: 'gold',
+    accent: 'red',
     title: "L'IMPOSTEUR AU PINCEAU",
     desc: "Dessine ton mot sans le trahir : en duel d'ardoises ou en fresque commune, trait par trait. Démasque l'intrus au vote !",
     minPlayers: 3,

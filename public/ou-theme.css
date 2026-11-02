@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800;900&family=Permanent+Marker&family=Noto+Serif+JP:wght@700;900&display=swap');
 
 /* ---------- Mise en page : sidebar manga + fond d'écran ---------- */
-/* Images dans public/images/ : fond.jpg, chapitre-0X.jpg, sidebar.jpg (optionnelle) */
+/* Fond uni sur toutes les pages. Images dans public/images/ : sidebar.jpg (optionnelle). */
 
 html:has(.ou-home) { color-scheme: dark; background: #0A0B10; }
 .ou-body { margin: 0; background: #0A0B10; }
@@ -12,21 +12,20 @@ html:has(.ou-home) { color-scheme: dark; background: #0A0B10; }
   --font-body: 'Nunito', system-ui, sans-serif;
   --ou-red: #E0203A;
   --ou-red-dark: #9E1023;
-  --ou-purple: #9B7BFF;
+  --ou-purple: #FF4D63; /* DA noir et rouge : l'ancien violet devient un rouge clair */
   --ou-ink: #0A0B10;
   --ou-panel: rgba(10, 11, 18, 0.88);
-  --ou-line: rgba(255, 255, 255, 0.82);
+  --ou-line: var(--ou-red); /* contour par défaut : rouge (DA noir et rouge) */
   --ou-brush: 'Permanent Marker', 'Baloo 2', cursive;
   --ou-jp: 'Noto Serif JP', serif;
 
   display: flex;
   min-height: 100vh;
-  background: var(--ou-ink) url('/images/fond.jpg') center / cover no-repeat fixed;
+  background: var(--ou-ink);
   color: #fff;
   font-family: var(--font-body);
 }
 .ou-home *, .ou-home *::before, .ou-home *::after { box-sizing: border-box; }
-.ou-home--plain { background: var(--ou-ink); }
 
 /* ----- Sidebar ----- */
 
@@ -102,10 +101,12 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 /* ----- Zone principale ----- */
 
 .ou-main { position: relative; flex: 1; min-width: 0; padding: 0 60px 40px 36px; overflow: hidden; }
+/* Le contenu occupe toute la largeur de la zone principale. */
+.ou-content { position: relative; z-index: 1; width: 100%; }
 
 .ou-hero-bg {
   position: absolute; inset: 0 0 auto 0; height: 100%; z-index: 0;
-  /* le fond d'écran (fond.jpg) est posé sur .ou-home ; ici juste un voile pour la lisibilité */
+  /* léger voile sur le haut de la zone principale */
   background: linear-gradient(90deg, rgba(10, 11, 16, 0.45) 0%, rgba(10, 11, 16, 0) 55%);
 }
 
@@ -161,7 +162,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 
 /* ----- Cartes chapitre ----- */
 
-.ou-chapters { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; max-width: 1080px; }
+.ou-chapters { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; }
 
 .ou-chapter {
   --accent: var(--ou-line);
@@ -289,7 +290,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 
 .ou-form-card {
   --accent: var(--ou-line);
-  position: relative; z-index: 1; max-width: 560px; overflow: hidden;
+  position: relative; z-index: 1; overflow: hidden;
   background: var(--ou-panel); border: 2px solid var(--accent); border-radius: 6px;
   box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 30%, transparent), 0 10px 30px rgba(0, 0, 0, 0.45);
 }
@@ -337,7 +338,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   --color-surface-alt: rgba(255, 255, 255, 0.04);
   --color-primary: #E0203A;
   --color-primary-dark: #9E1023;
-  --color-secondary: #9B7BFF;
+  --color-secondary: #FF4D63;
   --color-text: #FFFFFF;
   --color-muted: #A3A6B3;
   --color-danger: #FF5A6E;
@@ -352,7 +353,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 
 .ou-home .game-panel.ou-game {
   --accent: var(--ou-line);
-  position: relative; flex: 1 1 auto; max-width: 760px; min-height: 560px; margin: 0;
+  position: relative; flex: 1 1 auto; min-width: 0; max-width: none; min-height: 560px; margin: 0;
   overflow: visible; clip-path: none;
   background: var(--ou-panel); border: 2px solid var(--accent); border-radius: 6px;
   box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 28%, transparent), 0 10px 30px rgba(0, 0, 0, 0.45);
@@ -517,7 +518,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 
 /* ----- Chapitre 04 : L'Imposteur au Pinceau ----- */
 
-.ou-home { --ou-gold: #F2B544; }
+.ou-home { --ou-gold: var(--ou-red); } /* DA noir et rouge : le mode Pinceau passe aussi au rouge */
 .ou-chapter--gold { --accent: var(--ou-gold); box-shadow: 0 0 22px rgba(242, 181, 68, 0.25), 0 10px 30px rgba(0, 0, 0, 0.45); }
 .ou-chapter--gold .ou-chapter-tag,
 .ou-accent--gold .ou-chapter-tag { color: #111; }
@@ -552,7 +553,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 .ou-slate-label {
   position: absolute; top: 6px; left: 8px; z-index: 1; padding: 2px 10px;
   font-family: var(--font-display); font-weight: 800; font-style: italic; font-size: 12px;
-  text-transform: uppercase; letter-spacing: 0.5px; color: #111; background: var(--ou-gold);
+  text-transform: uppercase; letter-spacing: 0.5px; color: #fff; background: var(--ou-gold);
   clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
 }
 
@@ -570,7 +571,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 
 .ou-draw-banner {
   align-self: center; margin: 0 auto 14px; padding: 8px 26px;
-  font-family: var(--ou-brush); font-size: 26px; letter-spacing: 1px; color: #111;
+  font-family: var(--ou-brush); font-size: 26px; letter-spacing: 1px; color: #fff;
   background: var(--ou-gold); transform: rotate(-3deg);
   clip-path: polygon(2% 10%, 50% 0, 98% 8%, 100% 55%, 96% 100%, 45% 92%, 0 100%, 3% 50%);
 }
@@ -581,7 +582,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   padding: 4px 10px; font-size: 12px; font-weight: 700; border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.2); color: #C9CBD3;
 }
-.ou-draw-order-chip--on { border-color: var(--ou-gold); color: #111; background: var(--ou-gold); }
+.ou-draw-order-chip--on { border-color: var(--ou-gold); color: #fff; background: var(--ou-gold); }
 
 .ou-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 .ou-gallery .ou-slate { border-width: 4px; }
@@ -648,7 +649,7 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
 }
 .ou-page-footer a { color: #9C9FAB; }
 .ou-page-footer a:hover { color: #fff; }
-.ou-page-footer .ou-support-link { color: #F2B544; font-weight: 800; }
+.ou-page-footer .ou-support-link { color: #FF4D63; font-weight: 800; }
 
 /* ----- Responsive ----- */
 

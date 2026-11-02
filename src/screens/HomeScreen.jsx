@@ -4,8 +4,7 @@ import { CHAPTERS } from '../data/chapters';
 import { ANIME_LIST } from '../data/animeDatabase';
 import { CHARACTER_IMAGES } from '../data/wordImages';
 
-// L'accueil a un fond uni (sans fond.jpg) ; les cartes chapitre affichent des
-// portraits de personnages.
+// Les cartes chapitre affichent des portraits de personnages.
 
 const PORTRAITS_PER_CARD = 3;
 const POPULAR_ANIME_COUNT = 20; // licences du début de la liste : visages connus
@@ -60,7 +59,7 @@ export default function HomeScreen({ onCreate, onJoin }) {
   const portraits = useMemo(() => pickPortraits(CHAPTERS.length), []);
 
   return (
-    <OuShell active="home" plain>
+    <OuShell active="home">
       <section className="ou-hero">
         <p className="ou-hero-eyebrow">
           Un jeu. Des animes.<br />Une seule <em>vérité.</em>

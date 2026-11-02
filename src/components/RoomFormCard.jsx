@@ -3,7 +3,7 @@ import React from 'react';
 // Carte de formulaire (Créer / Rejoindre) dans la DA des cartes chapitre.
 // chapter : mode choisi sur l'accueil, ou null (ex. arrivée via un lien d'invitation).
 export default function RoomFormCard({ chapter, eyebrow, title, subtitle, onBack, children }) {
-  const accent = chapter ? chapter.accent : 'grey';
+  const accent = chapter ? chapter.accent : 'red';
 
   return (
     <>

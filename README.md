@@ -15,9 +15,8 @@ utilise **Firebase Realtime Database** : un service gratuit de Google, aucune li
 1. Va sur [console.firebase.google.com](https://console.firebase.google.com) et crée un projet
    (nom libre, ex. "otaku-undercover").
 2. Dans le menu de gauche : **Build → Realtime Database → Créer une base de données**.
-   Choisis une région proche de tes joueurs, et démarre **en mode test** (accès ouvert en
-   lecture/écriture pendant 30 jours — largement suffisant pour un party game, voir la note
-   sécurité plus bas).
+   Choisis une région proche de tes joueurs, et démarre **en mode verrouillé** : les vraies
+   règles sont à coller juste après (voir « Sécurité de la base » plus bas).
 3. Toujours dans la console : icône ⚙️ → **Paramètres du projet** → en bas, section "Vos
    applications" → clique l'icône `</>` (Web) → donne un nom à l'app → **Enregistrer**.
    Firebase t'affiche alors un bloc `firebaseConfig = { apiKey: "...", ... }`.
@@ -35,26 +34,34 @@ VITE_FIREBASE_APP_ID=le appId fourni
 Sans ce fichier `.env` rempli, le site affiche un message "Configuration requise" au lieu du
 jeu — c'est normal, il manque juste ces clés.
 
-### Note sécurité (à lire avant de publier)
-En mode test, n'importe qui connaissant l'URL de ta base Firebase peut théoriquement lire/écrire
-dedans (pas seulement via le jeu). C'est sans risque réel pour un party game sans données
-sensibles, mais Firebase désactive l'accès après 30 jours par sécurité. Pour le réactiver
-durablement avec des règles raisonnables, va dans **Realtime Database → Règles** et colle :
+### Sécurité de la base (obligatoire avant de publier)
+Le mode test de Firebase laisse n'importe qui lire, modifier ou effacer la base pendant
+30 jours, puis coupe tout l'accès. Le jeu utilise à la place des règles strictes, dans
+`database.rules.json`, qui s'appuient sur une **connexion anonyme** (chaque visiteur reçoit
+une identité Firebase invisible, sans compte ni e-mail) :
 
-```json
-{
-  "rules": {
-    "rooms": {
-      "$code": {
-        ".read": true,
-        ".write": true
-      }
-    }
-  }
-}
-```
+- il faut passer par le site (être connecté anonymement) pour lire ou écrire ;
+- impossible de lister les salons ; sans en être membre, on ne voit d'un salon que sa
+  phase (pour pouvoir le rejoindre), pas les joueurs ni la partie ;
+- seuls les membres d'un salon peuvent lire et modifier sa partie ;
+- chaque joueur ne peut créer ou modifier que sa propre fiche (pseudo de 24 caractères max) ;
+- on ne peut rejoindre un salon que pendant qu'il est en attente (lobby) ;
+- un salon ne peut être créé que par son hôte, et seul l'hôte peut le supprimer ;
+- toute donnée qui ne fait pas partie de la structure du jeu est refusée.
 
-(Ça revient au même niveau d'ouverture que le mode test, mais sans expiration à 30 jours.)
+Ménage automatique (pas de serveur nécessaire) : le dernier joueur qui quitte un salon le
+supprime, et les salons abandonnés depuis plus de 12 h sont supprimés par le prochain
+visiteur du site (index `roomAges`, qui ne contient que le code et la date de création).
+
+À faire une fois dans la console Firebase :
+1. **Build → Authentication → Commencer**, puis onglet **Sign-in method** → **Anonyme** →
+   activer → **Enregistrer**.
+2. **Build → Realtime Database → Règles** : remplace tout par le contenu de
+   `database.rules.json`, puis **Publier**.
+
+Pour tester ces règles en local avec les émulateurs Firebase (Java requis) : lance
+`firebase emulators:start --only database,auth`, puis le site avec la variable
+`VITE_FIREBASE_EMULATOR=1` (il se branche alors sur les émulateurs au lieu de la vraie base).
 
 ## 2. Lancer le projet en local
 

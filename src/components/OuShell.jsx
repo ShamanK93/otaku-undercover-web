@@ -106,12 +106,11 @@ function SidebarLink({ item, active, onHome }) {
 }
 
 // active : 'home' | 'rules' | 'about' ; onHome : retour à l'accueil sans recharger la page.
-// plain : fond uni, sans l'image fond.jpg (page d'accueil).
-export default function OuShell({ active = 'home', onHome, plain = false, children }) {
+export default function OuShell({ active = 'home', onHome, children }) {
   const name = getSavedName() || 'Invité';
 
   return (
-    <div className={`ou-home${plain ? ' ou-home--plain' : ''}`}>
+    <div className="ou-home">
       <aside className="ou-sidebar">
         <a className="ou-logo" href="/" onClick={onHome ? (e) => { e.preventDefault(); onHome(); } : undefined}>
           <div className="ou-logo-text">
@@ -144,7 +143,7 @@ export default function OuShell({ active = 'home', onHome, plain = false, childr
           <span className="ou-topbar-torii" aria-hidden="true"><IconTorii /></span>
         </header>
 
-        {children}
+        <div className="ou-content">{children}</div>
       </main>
     </div>
   );

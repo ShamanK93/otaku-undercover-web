@@ -1,19 +1,15 @@
-import { ref, set, update, get, push, onValue, off, serverTimestamp } from 'firebase/database';
-import { db } from '../firebase';
+import { ref, set, update, get, push, remove, onValue, off, serverTimestamp, query, orderByValue, limitToFirst } from 'firebase/database';
+import { db, getCurrentUid } from '../firebase';
 import { assignRoles, shuffle, checkWinCondition } from './gameLogic';
 import { buildDrawGame, tallyVotes, voteOutcome, afterVote, fresqueTurn } from './drawGame';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans caractères ambigus (0/O, 1/I...)
-const PLAYER_ID_KEY = 'otaku_undercover_player_id';
 const PLAYER_NAME_KEY = 'otaku_undercover_player_name';
 
-export function getOrCreatePlayerId() {
-  let id = window.localStorage.getItem(PLAYER_ID_KEY);
-  if (!id) {
-    id = 'p_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
-    window.localStorage.setItem(PLAYER_ID_KEY, id);
-  }
-  return id;
+// Identifiant du joueur = son identité anonyme Firebase (voir firebase.js) :
+// c'est elle que vérifient les règles de sécurité de la base.
+export function getPlayerId() {
+  return getCurrentUid();
 }
 
 export function getSavedName() {
@@ -42,13 +38,14 @@ export function getInviteLink(code) {
 // ---------- Création / connexion au salon ----------
 
 export async function createRoom(hostName, gameType = 'undercover') {
-  const playerId = getOrCreatePlayerId();
+  const playerId = getPlayerId();
   saveName(hostName);
 
   let code = generateRoomCode();
-  // évite (rarement) une collision de code sur un salon encore actif
+  // évite (rarement) une collision de code sur un salon encore actif.
+  // Seule la phase d'un salon est lisible sans en être membre.
   for (let attempt = 0; attempt < 5; attempt++) {
-    const snap = await get(ref(db, `rooms/${code}`));
+    const snap = await get(ref(db, `rooms/${code}/phase`));
     if (!snap.exists()) break;
     code = generateRoomCode();
   }
@@ -89,22 +86,24 @@ export async function createRoom(hostName, gameType = 'undercover') {
     });
   }
 
+  // Âge du salon, pour le ménage automatique des salons abandonnés.
+  await set(ref(db, `roomAges/${code}`), serverTimestamp());
+
   return { code, playerId };
 }
 
 export async function joinRoom(code, name) {
   const normalized = code.trim().toUpperCase();
-  const roomRef = ref(db, `rooms/${normalized}`);
-  const snap = await get(roomRef);
+  // Avant d'être membre, on ne peut lire que la phase du salon.
+  const snap = await get(ref(db, `rooms/${normalized}/phase`));
   if (!snap.exists()) {
     throw new Error("Ce salon n'existe pas. Vérifie le code.");
   }
-  const room = snap.val();
-  if (room.phase !== 'lobby') {
+  if (snap.val() !== 'lobby') {
     throw new Error('Cette partie a déjà commencé.');
   }
 
-  const playerId = getOrCreatePlayerId();
+  const playerId = getPlayerId();
   saveName(name);
 
   await update(ref(db, `rooms/${normalized}/players/${playerId}`), {
@@ -118,12 +117,53 @@ export async function joinRoom(code, name) {
 export function subscribeRoom(code, callback) {
   const roomRef = ref(db, `rooms/${code}`);
   const handler = (snap) => callback(snap.exists() ? snap.val() : null);
-  onValue(roomRef, handler);
+  // Salon supprimé (ou plus membre) : la lecture est refusée, on traite ça
+  // comme un salon fermé.
+  onValue(roomRef, handler, () => callback(null));
   return () => off(roomRef, 'value', handler);
 }
 
+// Le dernier joueur à partir supprime le salon (autorisé par les règles
+// quand il n'y a plus aucun joueur dedans). On regarde s'il reste quelqu'un
+// AVANT de partir : une fois sorti, on ne peut plus lire le salon.
 export async function leaveRoom(code, playerId) {
+  let alone = false;
+  try {
+    const players = await get(ref(db, `rooms/${code}/players`));
+    alone = Object.keys(players.val() || {}).every((id) => id === playerId);
+  } catch (e) {
+    // plus membre ou salon déjà supprimé
+  }
   await set(ref(db, `rooms/${code}/players/${playerId}`), null);
+  if (!alone) return;
+  try {
+    await remove(ref(db, `rooms/${code}`));
+    await remove(ref(db, `roomAges/${code}`));
+  } catch (e) {
+    // quelqu'un vient d'entrer : le salon reste
+  }
+}
+
+// Salons abandonnés (tout le monde a fermé l'onglet) : supprimés au bout de
+// 12 h par le prochain visiteur. On lit les 50 plus vieux âges de l'index
+// roomAges (il ne contient que code + date), et les règles vérifient l'âge
+// avant chaque suppression. Marge d'une heure pour une horloge locale en avance.
+const ROOM_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+const CLOCK_MARGIN_MS = 60 * 60 * 1000;
+
+export async function cleanupOldRooms() {
+  const snap = await get(query(ref(db, 'roomAges'), orderByValue(), limitToFirst(50)));
+  const limit = Date.now() - ROOM_MAX_AGE_MS - CLOCK_MARGIN_MS;
+  const old = Object.entries(snap.val() || {}).filter(([, createdAt]) => createdAt <= limit);
+  await Promise.all(old.map(async ([code]) => {
+    try {
+      await remove(ref(db, `rooms/${code}`));
+      await remove(ref(db, `roomAges/${code}`));
+    } catch (e) {
+      // déjà supprimé, ou pas encore assez vieux côté serveur
+    }
+  }));
+  return old.length;
 }
 
 // ---------- Configuration du salon (hôte) ----------
