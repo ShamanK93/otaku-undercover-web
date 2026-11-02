@@ -956,3 +956,11 @@ img { max-width: 100%; display: block; }
 .rule-recap-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .rule-recap-answers { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .rule-recap-answers .reward-pill { font-size: 11px; }
+
+/* Devine la règle : joueur démasqué, devenu spectateur */
+.rule-spectator {
+  margin-bottom: 14px; padding: 12px 14px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-primary); background: rgba(224, 32, 58, 0.12);
+  color: var(--color-text); font-size: 14px; line-height: 1.45;
+}
+.rule-spectator strong { color: var(--color-primary); }

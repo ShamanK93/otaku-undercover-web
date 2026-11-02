@@ -45,8 +45,10 @@ export default function RulePlayScreen({
   const deadline = room.rule.deadline;
   const remaining = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : null;
 
+  // Démasqué : spectateur jusqu'à la fin (sauf sa revanche immédiate à 2 joueurs).
+  const isSpectator = Boolean(revealed[playerId]);
   const iAlreadyAnsweredProposal = pendingPropose && pendingPropose.answers && pendingPropose.answers[playerId] !== undefined;
-  const iMustAnswerProposal = pendingPropose && pendingPropose.by !== playerId && !iAlreadyAnsweredProposal;
+  const iMustAnswerProposal = pendingPropose && pendingPropose.by !== playerId && !iAlreadyAnsweredProposal && !isSpectator;
   const iMustAnswerGuess = pendingGuess && pendingGuess.target === playerId;
   const iMustDoRevenge = revengePending && revengePending.defenderId === playerId && !pendingGuess;
   const iMustAct = (isMyTurn && !pendingPropose && !pendingGuess && !revengePending) || iMustAnswerProposal || iMustAnswerGuess || iMustDoRevenge;
@@ -115,6 +117,13 @@ export default function RulePlayScreen({
 
   return (
     <div className="screen">
+      {isSpectator && !(revengePending && revengePending.defenderId === playerId) && (
+        <div className="rule-spectator" role="status">
+          <strong>Ta règle a été devinée.</strong> Tu es spectateur : tu peux suivre la partie jusqu'au bout,
+          mais tu ne joues plus et tu ne réponds plus aux propositions.
+        </div>
+      )}
+
       {myRule && (
         <div className="rule-reminder">
           <span className="rule-reminder-label">Ta règle</span>
@@ -173,6 +182,8 @@ export default function RulePlayScreen({
           </div>
           {pendingPropose.by === playerId ? (
             <p className="lobby-waiting">En attente des réponses des autres joueurs...</p>
+          ) : isSpectator ? (
+            <p className="lobby-waiting">Les joueurs encore en jeu répondent...</p>
           ) : iAlreadyAnsweredProposal ? (
             <p className="lobby-waiting">Réponse envoyée, en attente des autres...</p>
           ) : (

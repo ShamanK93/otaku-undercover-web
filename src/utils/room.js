@@ -431,11 +431,13 @@ export async function startRulePlay(code, room) {
 }
 
 // Prochain joueur dans l'ordre des tours, en sautant ceux dont la règle a
-// déjà été devinée (ils sont hors-jeu).
-function nextTurnIndex(room) {
+// déjà été devinée (ils sont hors-jeu). extraRevealed : joueur démasqué à
+// l'instant, pas encore enregistré dans room.rule.revealed.
+function nextTurnIndex(room, extraRevealed = null) {
   const order = room.rule.turnOrder;
   const total = order.length;
-  const revealed = room.rule.revealed || {};
+  const revealed = { ...(room.rule.revealed || {}) };
+  if (extraRevealed) revealed[extraRevealed] = true;
   let idx = room.rule.turnIndex;
   for (let i = 0; i < total; i++) {
     idx = (idx + 1) % total;
@@ -476,15 +478,16 @@ export async function proposeCharacter(code, room, playerId, character, animeId 
 }
 
 // Un joueur (autre que le proposeur) répond, selon SA propre règle secrète,
-// si le personnage proposé correspond ou non.
+// si le personnage proposé correspond ou non. Les joueurs démasqués sont
+// spectateurs : ils ne répondent plus.
 export async function answerProposal(code, room, playerId, matches) {
   const pending = room.rule.pendingPropose;
   if (!pending || playerId === pending.by) return;
+  if ((room.rule.revealed || {})[playerId]) return;
 
   await set(ref(db, `rooms/${code}/rule/pendingPropose/answers/${playerId}`), matches);
 
-  const players = Object.keys(room.players || {});
-  const expected = players.filter((id) => id !== pending.by);
+  const expected = aliveIds(room).filter((id) => id !== pending.by);
   const already = Object.keys(pending.answers || {});
   const willHaveAll = expected.every((id) => id === playerId || already.includes(id));
 
@@ -597,7 +600,7 @@ export async function answerGuess(code, room, playerId, correct) {
       ? { type: 'winner', winnerId: stillAlive[0] }
       : { type: 'tie' };
   } else {
-    updates['rule/turnIndex'] = nextTurnIndex(room);
+    updates['rule/turnIndex'] = nextTurnIndex(room, pending.target);
     updates['rule/deadline'] = actionDeadline(room);
   }
   await update(ref(db, `rooms/${code}`), updates);

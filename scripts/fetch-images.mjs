@@ -506,6 +506,10 @@ export const ANIME_IMAGES = ${JSON.stringify(animeImages, null, 2)};
 export const CHARACTER_IMAGES = ${JSON.stringify(characterImages, null, 2)};
 `;
   fs.writeFileSync(OUT_MANIFEST, manifest);
+  // Liste des affiches pour le mur des pages statiques (public/poster-wall.js).
+  const posterList = fs.readdirSync(path.join(PUBLIC_DIR, 'images/animes'))
+    .filter((f) => f.endsWith('.webp')).sort().map((f) => `/images/animes/${f}`);
+  fs.writeFileSync(path.join(PUBLIC_DIR, 'images/animes/list.json'), JSON.stringify(posterList));
 
   // Supprime les images qui ne servent plus (nom ou correspondance changés).
   reports.forEach((r) => {

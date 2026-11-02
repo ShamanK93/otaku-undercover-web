@@ -697,3 +697,68 @@ a.ou-nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
   .ou-home .game-panel.ou-game { min-height: 0; }
   .ou-home .ou-game .screen { padding: 46px 16px 22px; }
 }
+
+/* ----- Accueil : polaroïds suspendus à un fil (PolaroidLineCarousel) ----- */
+
+.ou-polaroids { position: relative; z-index: 1; margin-top: 8px; }
+
+/* Fond de toutes les pages : mur d'affiches des animés, assombri et teinté de
+   rouge, qui remplit toute la zone principale (composant PosterWall, ou
+   public/poster-wall.js sur les pages statiques). */
+.ou-home-wall {
+  position: absolute; z-index: 0; inset: 0;
+  overflow: hidden; pointer-events: none;
+}
+/* seules les affiches sont inclinées : le cadre reste droit, sans bord visible */
+.ou-home-wall-grid {
+  position: absolute; top: -60px; left: -15%; width: 130%;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px;
+  transform: rotate(-4deg); transform-origin: 50% 0; /* pivot en haut : le mur reste en place même très haut (mobile) */
+}
+.ou-home-wall img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 4px; filter: grayscale(0.25) brightness(0.7); }
+.ou-home-wall::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgba(10, 11, 16, 0.75) 0%, rgba(10, 11, 16, 0.25) 50%, rgba(10, 11, 16, 0.75) 100%),
+    linear-gradient(180deg, rgba(224, 32, 58, 0.16) 0, rgba(10, 11, 16, 0.55) 700px, rgba(10, 11, 16, 0.7) 100%);
+}
+.ou-polaroids .pl-root { cursor: grab; }
+.ou-polaroids .pl-peg { background: linear-gradient(90deg, #9E1023, #E0203A 45%, #9E1023); }
+.ou-polaroids .pl-peg::after { background: rgba(0, 0, 0, 0.35); }
+.ou-polaroids .pl-note {
+  font: 400 15px/1.1 var(--ou-brush); color: #141414; letter-spacing: 0.3px;
+  white-space: normal; text-align: center; /* passe sur 2 lignes si le polaroïd est étroit */
+}
+.ou-polaroids .pl-title { font-family: var(--ou-brush); font-weight: 400; letter-spacing: 0.5px; text-shadow: 2px 2px 0 #000; }
+.ou-polaroids .pl-sub { font-family: var(--font-body); font-size: 14.5px; font-weight: 600; color: #E3E4E9; white-space: normal; max-width: 620px; }
+.ou-polaroids .pl-count b { color: var(--ou-red); }
+.ou-polaroids .pl-btn { border-color: rgba(255, 255, 255, 0.35); }
+.ou-polaroids .pl-btn:hover { background: var(--ou-red); border-color: var(--ou-red); color: #fff; }
+
+.ou-polaroid-actions {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap;
+  padding: 18px clamp(16px, 4vw, 56px) 8px;
+  border-top: 1px solid rgba(224, 32, 58, 0.35);
+}
+.ou-polaroid-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ou-polaroid-tag {
+  padding: 6px 26px 6px 14px; background: var(--ou-red); color: #fff;
+  font-family: var(--font-display); font-weight: 800; font-style: italic; font-size: 13px;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+}
+.ou-polaroid-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+.ou-polaroid-buttons .ou-btn { min-width: 210px; }
+
+@media (max-width: 680px) {
+  .ou-polaroids { margin-top: -40px; }
+  .ou-polaroids .pl-note { font-size: 10.5px; line-height: 1.1; height: 36px; padding: 0 2px; white-space: normal; text-align: center; }
+  .ou-polaroids .pl-bar { flex-wrap: wrap; row-gap: 10px; }
+  .ou-polaroids .pl-cap { flex-basis: 100%; }
+  .ou-polaroids .pl-title { font-size: 19px; white-space: normal; }
+  .ou-polaroids .pl-sub { font-size: 13.5px; }
+  .ou-polaroids .pl-count { margin-left: auto; }
+  .ou-polaroid-actions { flex-direction: column; align-items: stretch; }
+  .ou-polaroid-buttons { flex-direction: column; }
+  .ou-polaroid-buttons .ou-btn { min-width: 0; width: 100%; }
+}

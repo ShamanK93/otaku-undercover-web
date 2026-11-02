@@ -1,5 +1,6 @@
 import React from 'react';
 import { getSavedName } from '../utils/room';
+import PosterWall from './PosterWall';
 
 // Mise en page commune (DA MyDesign) : sidebar manga + fond d'écran + barre du haut.
 // Les pages statiques (public/regles.html, public/a-propos.html) reprennent le même balisage.
@@ -132,6 +133,7 @@ export default function OuShell({ active = 'home', onHome, children }) {
       </aside>
 
       <main className="ou-main">
+        <PosterWall />
         <div className="ou-hero-bg" aria-hidden="true" />
         <span className="ou-side-kanji" aria-hidden="true">仲間を信じろ</span>
 
