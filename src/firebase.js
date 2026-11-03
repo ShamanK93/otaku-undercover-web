@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
-import { getAuth, signInAnonymously, onAuthStateChanged, connectAuthEmulator } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged, connectAuthEmulator, setPersistence, browserSessionPersistence } from 'firebase/auth';
 
 // Les valeurs viennent d'un fichier .env (voir .env.example et le README,
 // section "Mode en ligne") — jamais codées en dur ici.
@@ -19,7 +19,8 @@ let db = null;
 let auth = null;
 
 // Chaque visiteur reçoit une identité anonyme Firebase (sans compte ni
-// e-mail), gardée par le navigateur. Les règles de sécurité de la base
+// e-mail), propre à l'onglet : deux onglets du même navigateur sont deux
+// joueurs distincts (recharger l'onglet garde le même joueur). Les règles de sécurité de la base
 // (database.rules.json) s'appuient dessus : un joueur ne peut modifier que
 // sa propre fiche, et seuls les membres d'un salon peuvent y écrire.
 // authReady se résout avec l'identifiant du joueur, ou null en cas d'échec.
@@ -43,11 +44,13 @@ if (firebaseReady) {
         resolve(user.uid);
       }
     });
-    signInAnonymously(auth).catch((error) => {
-      authError = error;
-      unsubscribe();
-      resolve(null);
-    });
+    setPersistence(auth, browserSessionPersistence)
+      .then(() => signInAnonymously(auth))
+      .catch((error) => {
+        authError = error;
+        unsubscribe();
+        resolve(null);
+      });
   });
 } else {
   // eslint-disable-next-line no-console
